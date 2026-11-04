@@ -49,7 +49,9 @@ bind W display-popup -E -w 90% -h 85% -T ' Agent Multiplexer ' -b rounded -s 'bg
 `-s 'bg=terminal'` overrides the theme's solid `popup-style` for this popup only and makes
 tmux emit the terminal's default background (SGR 49), so whatever terminal is running
 composites its own background behind the popup. `bg=terminal` is a tmux 3.8 colour
-keyword, so setup omits the flag on older versions and falls back to `popup-style`.
+keyword. On older versions setup drops the flag and clears `popup-style` with
+`set-option -gu` immediately before opening, so tmux's default (the terminal background)
+applies.
 `prefix + w` is left untouched as the plain `choose-tree` fallback.
 
 ### 4.2 Layout

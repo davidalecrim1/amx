@@ -103,7 +103,8 @@ tmux source-file ~/.config/amux/tmux.conf
 ```
 
 On tmux older than 3.8, setup omits `-s 'bg=terminal'` because the keyword does not exist
-there; the popup then uses the configured `popup-style`.
+there; it clears `popup-style` immediately before opening the popup instead, so tmux's
+default (the terminal background) applies.
 
 If you do not want `amux setup` to edit your configs, run `amux setup --dry-run` to see
 every change, then wire the lines above by hand.

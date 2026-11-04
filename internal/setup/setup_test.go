@@ -148,6 +148,9 @@ func TestSnippetContent(t *testing.T) {
 	if strings.Contains(old, "bg=terminal") {
 		t.Fatalf("old tmux should not get the terminal colour flag:\n%s", old)
 	}
+	if !strings.Contains(old, "set-option -gu popup-style") {
+		t.Fatalf("old tmux should clear the theme popup style:\n%s", old)
+	}
 	if strings.Contains(s, "''") {
 		t.Fatalf("double quoting in snippet:\n%s", s)
 	}
