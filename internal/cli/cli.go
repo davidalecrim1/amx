@@ -76,7 +76,7 @@ func (a *App) Run(args []string) int {
 	case "setup":
 		return a.setupCmd(rest)
 	case "version":
-		fmt.Fprintln(a.Stdout, "amx 0.1.0")
+		fmt.Fprintln(a.Stdout, "amx 0.3.0")
 		return 0
 	case "help", "-h", "--help":
 		a.usage()
