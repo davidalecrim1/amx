@@ -336,6 +336,11 @@ func renderPane(s sessionView, w windowView, p paneView, lastWin, lastPane bool,
 		b.WriteString(sep)
 		b.WriteString(paint(opt, pad(FormatAge(opt.Now.Sub(p.rec.UpdatedAt)), t.age), faint))
 		b.WriteString(sep)
+	} else {
+		b.WriteString(strings.Repeat(" ", t.status))
+		b.WriteString(sep)
+		b.WriteString(strings.Repeat(" ", t.age))
+		b.WriteString(sep)
 	}
 
 	b.WriteString(paint(opt, pad(w.index+"."+p.pane.PaneIndex, t.ref), faint))
