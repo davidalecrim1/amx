@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/davidalecrim1/amux/internal/agent"
-	"github.com/davidalecrim1/amux/internal/state"
-	"github.com/davidalecrim1/amux/internal/tmux"
+	"github.com/davidalecrim1/amx/internal/agent"
+	"github.com/davidalecrim1/amx/internal/state"
+	"github.com/davidalecrim1/amx/internal/tmux"
 )
 
 func (a *App) hookCmd(args []string) int {

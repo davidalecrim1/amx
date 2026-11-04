@@ -3,7 +3,7 @@ package cli
 import (
 	"testing"
 
-	"github.com/davidalecrim1/amux/internal/target"
+	"github.com/davidalecrim1/amx/internal/target"
 )
 
 func TestParseSelection(t *testing.T) {
@@ -32,7 +32,7 @@ func TestShellQuote(t *testing.T) {
 	if got := shellQuote("/plain/path"); got != "/plain/path" {
 		t.Fatalf("got %q", got)
 	}
-	if got := shellQuote("/with space/amux"); got != "'/with space/amux'" {
+	if got := shellQuote("/with space/amx"); got != "'/with space/amx'" {
 		t.Fatalf("got %q", got)
 	}
 }

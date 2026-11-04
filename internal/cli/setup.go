@@ -1,6 +1,6 @@
 package cli
 
-import "github.com/davidalecrim1/amux/internal/setup"
+import "github.com/davidalecrim1/amx/internal/setup"
 
 func (a *App) setupCmd(args []string) int {
 	dry := false

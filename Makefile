@@ -1,16 +1,16 @@
-BIN := bin/amux
+BIN := bin/amx
 PREFIX ?= $(HOME)/.local
 
 .PHONY: build install test fmt vet clean
 
 build:
 	@mkdir -p bin
-	go build -o $(BIN) ./cmd/amux
+	go build -o $(BIN) ./cmd/amx
 
 install: build
 	@mkdir -p $(PREFIX)/bin
-	install -m 0755 $(BIN) $(PREFIX)/bin/amux
-	@echo "installed $(PREFIX)/bin/amux"
+	install -m 0755 $(BIN) $(PREFIX)/bin/amx
+	@echo "installed $(PREFIX)/bin/amx"
 
 test:
 	go test ./...

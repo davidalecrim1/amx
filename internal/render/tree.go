@@ -9,9 +9,9 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/davidalecrim1/amux/internal/state"
-	"github.com/davidalecrim1/amux/internal/target"
-	"github.com/davidalecrim1/amux/internal/tmux"
+	"github.com/davidalecrim1/amx/internal/state"
+	"github.com/davidalecrim1/amx/internal/target"
+	"github.com/davidalecrim1/amx/internal/tmux"
 )
 
 const (

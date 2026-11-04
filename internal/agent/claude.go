@@ -4,7 +4,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/davidalecrim1/amux/internal/state"
+	"github.com/davidalecrim1/amx/internal/state"
 )
 
 type Result struct {

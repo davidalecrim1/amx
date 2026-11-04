@@ -4,7 +4,7 @@ Guidance for coding agents working in this repository.
 
 ## What this is
 
-amux is a Go CLI plus an fzf popup. It shows which tmux panes run an AI agent, what state
+amx is a Go CLI plus an fzf popup. It shows which tmux panes run an AI agent, what state
 each agent is in, and jumps to the selected pane. Hooks write small JSON files; the popup
 reads them. There is no daemon.
 
@@ -16,31 +16,31 @@ Keep both in sync when behavior changes.
 ## Commands
 
 ```sh
-make build      # builds bin/amux
-make install    # installs to ~/.local/bin/amux
+make build      # builds bin/amx
+make install    # installs to ~/.local/bin/amx
 make test       # go test ./...
 make vet
 make fmt
 ```
 
 The tmux binding and the agent hooks call the installed binary
-(`~/.local/bin/amux`), not `bin/amux`. Run `make install` after changing the binary if you
+(`~/.local/bin/amx`), not `bin/amx`. Run `make install` after changing the binary if you
 want the live popup to use it.
 
 Useful manual commands:
 
 ```sh
-amux doctor                 # state, hooks, integrations, fzf
-amux list --ansi            # the exact rows fzf receives
-amux list --json            # tracked records
-amux preview p:%0           # one pane preview
-amux setup --dry-run        # show every config mutation without applying it
+amx doctor                 # state, hooks, integrations, fzf
+amx list --ansi            # the exact rows fzf receives
+amx list --json            # tracked records
+amx preview p:%0           # one pane preview
+amx setup --dry-run        # show every config mutation without applying it
 ```
 
 ## Layout
 
 ```
-cmd/amux/main.go          command dispatch
+cmd/amx/main.go          command dispatch
 internal/cli/             pick, list, jump, kill, reset, ack, copy, focus,
                           hook claude, report, fold/unfold/toggle, doctor, setup
 internal/render/          rows, ordering, ANSI palette
@@ -56,11 +56,11 @@ docs/SCOPE.md             design decisions
 
 ```
 Claude hooks ─┐
-              ├─> amux hook / amux report ─> ~/.local/state/amux/<server-pid>/<pane>.json
+              ├─> amx hook / amx report ─> ~/.local/state/amx/<server-pid>/<pane>.json
 OpenCode  ────┘                                        │
                                                        ▼
-tmux list-panes -a ──────────────> amux pick (fzf) ─> jump / kill / reset / ack / copy
-tmux focus hooks ─> amux focus ──> state files
+tmux list-panes -a ──────────────> amx pick (fzf) ─> jump / kill / reset / ack / copy
+tmux focus hooks ─> amx focus ──> state files
 ```
 
 ## Invariants
@@ -77,7 +77,7 @@ tmux focus hooks ─> amux focus ──> state files
   exists.
 - The renderer never draws status from process names or pane contents. If a hook did not
   report it, it is not known.
-- Focus clears DONE_UNSEEN to IDLE. `amux unread` is the only path back: it promotes IDLE
+- Focus clears DONE_UNSEEN to IDLE. `amx unread` is the only path back: it promotes IDLE
   to DONE_UNSEEN and leaves RUNNING and NEEDS_INPUT alone.
 - Dependencies: standard library only. Do not add modules.
 
@@ -99,14 +99,14 @@ These are easy to regress. Each one has a test or a documented reason.
   `reload-sync(...)+pos(N)` from the transform.
 - The list is pre-sorted; `--no-sort` preserves that order.
 - The popup refreshes live via `--listen=<unix socket>` plus a one-second ticker that
-  POSTs `reload(amux list --ansi)`. It is a goroutine inside `amux pick`, not a daemon;
+  POSTs `reload(amx list --ansi)`. It is a goroutine inside `amx pick`, not a daemon;
   fzf 0.71+ keeps the query and current item across the reload.
 
 ### tmux
 
 - `bg=default` in a style means the default value of that option (the theme surface), not
   the terminal background. The terminal background is `bg=terminal`, which emits SGR 49.
-  It exists in tmux 3.8+, so `amux setup` version-gates it.
+  It exists in tmux 3.8+, so `amx setup` version-gates it.
 - The tokyo-night theme re-applies `popup-style` on every status render. A global override
   gets clobbered; the popup must pass `-s` on `display-popup`.
 - `capture-pane` without `-S` returns the visible screen. `-S` includes scrollback and
@@ -123,7 +123,7 @@ These are easy to regress. Each one has a test or a documented reason.
   `TMUX_PANE` can point at a pane that no longer exists.
 - `ctx.location.directory` is the project root, which may be a parent of the pane's
   directory. The service's `process.cwd()` is the launch directory and usually matches.
-- The plugin sends both `cwd` (launch dir) and `project`; `amux report` prefers a live
+- The plugin sends both `cwd` (launch dir) and `project`; `amx report` prefers a live
   `pane_id`, then a unique pane whose path equals `cwd`, then `project`, filtered by the
   pane running the agent. Ambiguity is resolved by the active pane, otherwise dropped.
 - The OpenCode v2 API is different from v1. v1 plugins do not run at all.
@@ -140,19 +140,19 @@ These are easy to regress. Each one has a test or a documented reason.
   `💤 IDLE`), never a background colour. Only the agent pane carries a marker. A session
   aggregates only when it has more than one agent or is collapsed; a window aggregates only
   when collapsed. There is no picker header; keep the surface minimal.
-- The picker exports `AMUX_LIST_WIDTH` from the popup's tty width; `amux list` uses it to
+- The picker exports `AMX_LIST_WIDTH` from the popup's tty width; `amx list` uses it to
   size the branch/path columns and truncate window names. Do not restore fixed
   widths.
 - The preview strips background SGR and every non-SGR escape, then cuts each line to
   `FZF_PREVIEW_COLUMNS - 1`. A TUI with a 200-column frame must not wrap into blocks.
 - Ordering is urgency first (needs-input → done-unseen → running → idle), then last used
   descending, recursively at every level.
-- Collapse state lives in the file named by `AMUX_TREE_STATE`, created per picker
+- Collapse state lives in the file named by `AMX_TREE_STATE`, created per picker
   invocation and removed on exit.
 
 ### Setup
 
-- `amux setup` must be idempotent. It backs up `~/.claude/settings.json` before merging,
+- `amx setup` must be idempotent. It backs up `~/.claude/settings.json` before merging,
   skips handlers whose command already exists, and refuses to overwrite an OpenCode plugin
   that lacks the generated marker.
 - Claude hook handlers are synchronous with `timeout: 5`. Ordered delivery is what
@@ -173,7 +173,7 @@ These are easy to regress. Each one has a test or a documented reason.
   ```
 
 - tmux-dependent tests need a live server. Always use a throwaway socket
-  (`tmux -L amux-test ...`) and `-f /dev/null` so the user's config and sessions are not
+  (`tmux -L amx-test ...`) and `-f /dev/null` so the user's config and sessions are not
   touched. Never kill the default server.
 
 ## Do not
@@ -189,4 +189,4 @@ These are easy to regress. Each one has a test or a documented reason.
 ## Commits
 
 Imperative subject, prefixed `feat:`, `fix:`, `docs:`, or `chore:`. Keep the body focused
-on why. The public repo is `davidalecrim1/amux`.
+on why. The public repo is `davidalecrim1/amx`.

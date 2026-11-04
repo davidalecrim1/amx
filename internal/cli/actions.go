@@ -8,9 +8,9 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/davidalecrim1/amux/internal/state"
-	"github.com/davidalecrim1/amux/internal/target"
-	"github.com/davidalecrim1/amux/internal/tmux"
+	"github.com/davidalecrim1/amx/internal/state"
+	"github.com/davidalecrim1/amx/internal/target"
+	"github.com/davidalecrim1/amx/internal/tmux"
 )
 
 func (a *App) jumpCmd(args []string) int {
@@ -275,7 +275,7 @@ func clipboard(value string) error {
 func confirm(prompt string) bool {
 	tty, err := os.OpenFile("/dev/tty", os.O_RDWR, 0)
 	if err != nil {
-		fmt.Fprint(os.Stderr, "amux: cannot prompt, pass --yes\n")
+		fmt.Fprint(os.Stderr, "amx: cannot prompt, pass --yes\n")
 		return false
 	}
 	defer tty.Close()

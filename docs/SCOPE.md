@@ -1,7 +1,7 @@
-# amux — Scope
+# amx — Scope
 
 Status: draft for approval
-Repo: `github.com/davidalecrim1/amux`
+Repo: `github.com/davidalecrim1/amx`
 Supersedes: `samleeney/tmux-agent-status` (architecture only; no code reuse)
 
 ## 1. Problem
@@ -16,7 +16,7 @@ sometimes sticks on the wrong state after an interrupt or a pane lifecycle chang
 pane, a status-line summary, an unread inbox, park/wait modes, and ~11.8k lines of Bash.
 The sidebar is the main surface there; it is not wanted here.
 
-## 2. What amux is
+## 2. What amx is
 
 A single Go binary plus a tmux popup.
 
@@ -43,7 +43,7 @@ Cut permanently unless re-scoped later:
 ### 4.1 Entry point
 
 ```
-bind W display-popup -E -w 90% -h 85% -T ' Agent Multiplexer ' -b rounded -s 'bg=terminal' -S 'fg=brightblack' '~/.local/bin/amux pick'
+bind W display-popup -E -w 90% -h 85% -T ' Agent Multiplexer ' -b rounded -s 'bg=terminal' -S 'fg=brightblack' '~/.local/bin/amx pick'
 ```
 
 `-s 'bg=terminal'` overrides the theme's solid `popup-style` for this popup only and makes
@@ -152,7 +152,7 @@ you.
 The list is regenerated on open and then every second while the popup is open, through fzf's
 `--listen` socket. Changes are visible without closing the picker, and fzf keeps the
 query and current item across the reload. The refresh goroutine lives only as long as
-`amux pick`; nothing survives the command.
+`amx pick`; nothing survives the command.
 
 A right-side preview pane (half the popup, with a divider) shows the highlighted pane's
 visible screen via `tmux capture-pane`, never its scrollback. The preview strips background colours and non-SGR escapes, then cuts
@@ -163,12 +163,12 @@ into a block of colours.
 
 ### 5.1 State ownership
 
-Hooks own the state. amux never infers agent state from pane contents or processes.
+Hooks own the state. amx never infers agent state from pane contents or processes.
 The picker reconciles only against live tmux panes (see 5.4).
 
 ### 5.2 Claude Code
 
-`amux hook claude <Event>` reads the hook JSON from stdin.
+`amx hook claude <Event>` reads the hook JSON from stdin.
 
 | Hook event | Result |
 | --- | --- |
@@ -194,9 +194,9 @@ Hooks are observational and must never block the agent:
 
 ### 5.3 OpenCode
 
-A generated plugin at `~/.config/opencode/plugins/amux.js`, installed by `amux setup`,
+A generated plugin at `~/.config/opencode/plugins/amx.js`, installed by `amx setup`,
 subscribing to the OpenCode v2 public event stream and piping normalized JSON into
-`amux report`. v1 plugins do not run in v2, so this targets `Plugin.define` and
+`amx report`. v1 plugins do not run in v2, so this targets `Plugin.define` and
 `ctx.event.subscribe` exclusively.
 
 | Event | Result |
@@ -231,12 +231,12 @@ There is no clock and no daemon, so the picker reconciles at open time:
    visible, and `Ctrl-R` fixes it.
 
 DONE_UNSEEN → IDLE happens when you focus the pane. tmux hooks (`after-select-pane`,
-`after-select-window`, `client-session-changed`) call `amux focus <pane-id or
+`after-select-window`, `client-session-changed`) call `amx focus <pane-id or
 session:window>`, which clears the marker and stamps `last_focus_at`. `Ctrl-A`
 acknowledges without visiting. A `Stop` inside the pane you are currently looking at is
 recorded as IDLE immediately, so watching an agent finish never leaves a stale `DONE`.
 
-The reverse is explicit: `amux unread <target>` promotes IDLE to DONE_UNSEEN and bumps
+The reverse is explicit: `amx unread <target>` promotes IDLE to DONE_UNSEEN and bumps
 `updated_at`. It never touches RUNNING or NEEDS_INPUT. `prefix+u` runs it for the current
 pane; `Ctrl-U` runs it for the selected picker row.
 
@@ -249,11 +249,11 @@ It is the honest signal for stale state.
 
 ```
 Claude hooks ─┐
-              ├─> amux report / amux hook ─> ~/.local/state/amux/<server-pid>/<pane>.json
+              ├─> amx report / amx hook ─> ~/.local/state/amx/<server-pid>/<pane>.json
 OpenCode  ────┘                                        │
                                                        ▼
-tmux list-panes -a ──────────────> amux pick (fzf) ─> jump / kill / reset / ack / copy
-tmux focus hooks ─> amux focus ──> state files
+tmux list-panes -a ──────────────> amx pick (fzf) ─> jump / kill / reset / ack / copy
+tmux focus hooks ─> amx focus ──> state files
 ```
 
 Read path only. No goroutine runs longer than the popup, no background process survives
@@ -264,7 +264,7 @@ branch lookup runs in parallel per pane with a 1.5 s cap; failures render `-`.
 
 ## 7. State format
 
-`~/.local/state/amux/<server-pid>/<pane-id>.json`, one file per pane, written atomically
+`~/.local/state/amx/<server-pid>/<pane-id>.json`, one file per pane, written atomically
 (temp file + rename). Different panes never contend; same-pane writes are last-wins.
 
 ```json
@@ -287,48 +287,48 @@ branch lookup runs in parallel per pane with a 1.5 s cap; failures render `-`.
 
 | Command | Purpose |
 | --- | --- |
-| `amux pick` | popup entrypoint: build list, run fzf, dispatch the chosen action |
-| `amux list [--ansi] [--json]` | render the tree (used by fzf reload and for debugging) |
-| `amux preview <target>` | capture-pane preview for fzf |
-| `amux jump <target>` | switch client, window, pane |
-| `amux kill <target> [--yes]` | kill pane, window, or session with confirmation |
-| `amux reset <target>` | set tracked state to IDLE for the target |
-| `amux ack <target>` | clear DONE_UNSEEN for the target |
-| `amux copy <target> [--cwd]` | put the target ref or cwd on the clipboard |
-| `amux focus <pane-id>` | tmux hook callback: mark focused, clear DONE_UNSEEN |
-| `amux hook claude <Event>` | Claude Code hook adapter (stdin JSON) |
-| `amux report` | normalized writer (stdin JSON), used by the OpenCode plugin |
-| `amux doctor` | dump pane/state mismatches, hook installation status, binary path |
-| `amux setup [--dry-run]` | install tmux bindings/hooks, Claude hooks, OpenCode plugin |
+| `amx pick` | popup entrypoint: build list, run fzf, dispatch the chosen action |
+| `amx list [--ansi] [--json]` | render the tree (used by fzf reload and for debugging) |
+| `amx preview <target>` | capture-pane preview for fzf |
+| `amx jump <target>` | switch client, window, pane |
+| `amx kill <target> [--yes]` | kill pane, window, or session with confirmation |
+| `amx reset <target>` | set tracked state to IDLE for the target |
+| `amx ack <target>` | clear DONE_UNSEEN for the target |
+| `amx copy <target> [--cwd]` | put the target ref or cwd on the clipboard |
+| `amx focus <pane-id>` | tmux hook callback: mark focused, clear DONE_UNSEEN |
+| `amx hook claude <Event>` | Claude Code hook adapter (stdin JSON) |
+| `amx report` | normalized writer (stdin JSON), used by the OpenCode plugin |
+| `amx doctor` | dump pane/state mismatches, hook installation status, binary path |
+| `amx setup [--dry-run]` | install tmux bindings/hooks, Claude hooks, OpenCode plugin |
 
 Targets: `%pane`, `session:window.pane`, `session:window`, `session`. Rows carry an opaque
 target id in a tab-separated field that fzf hides.
 
 ## 9. Setup
 
-`make install` builds to `~/.local/bin/amux`. `amux setup` is idempotent and backs up
+`make install` builds to `~/.local/bin/amx`. `amx setup` is idempotent and backs up
 before editing:
 
-1. Writes `~/.config/amux/tmux.conf`:
+1. Writes `~/.config/amx/tmux.conf`:
 
 ```tmux
-bind W display-popup -E -w 90% -h 85% -T ' Agent Multiplexer ' -b rounded -s 'bg=terminal' -S 'fg=brightblack' '~/.local/bin/amux pick'
-bind u run-shell -b "~/.local/bin/amux unread #{pane_id}"
-set-hook -g after-select-pane   'run-shell -b "~/.local/bin/amux focus #{pane_id}"'
-set-hook -g after-select-window 'run-shell -b "~/.local/bin/amux focus #{pane_id}"'
-set-hook -g client-session-changed 'run-shell -b "~/.local/bin/amux focus #{pane_id}"'
+bind W display-popup -E -w 90% -h 85% -T ' Agent Multiplexer ' -b rounded -s 'bg=terminal' -S 'fg=brightblack' '~/.local/bin/amx pick'
+bind u run-shell -b "~/.local/bin/amx unread #{pane_id}"
+set-hook -g after-select-pane   'run-shell -b "~/.local/bin/amx focus #{pane_id}"'
+set-hook -g after-select-window 'run-shell -b "~/.local/bin/amx focus #{pane_id}"'
+set-hook -g client-session-changed 'run-shell -b "~/.local/bin/amx focus #{pane_id}"'
 ```
 
-and appends `source-file ~/.config/amux/tmux.conf` to `~/.config/tmux/tmux.conf` if the
-line is absent. Existing `amux` hooks are removed first so re-running setup never
+and appends `source-file ~/.config/amx/tmux.conf` to `~/.config/tmux/tmux.conf` if the
+line is absent. Existing `amx` hooks are removed first so re-running setup never
 duplicates them.
 
 2. Merges the Claude Code hooks into `~/.claude/settings.json`, adding to each event's
    array without touching existing handlers. Timestamped backup at
-   `~/.claude/settings.json.amux-<ts>.bak`. Detects an existing amux handler by command
+   `~/.claude/settings.json.amx-<ts>.bak`. Detects an existing amx handler by command
    path and skips it.
 
-3. Writes the OpenCode plugin to `~/.config/opencode/plugins/amux.js`, refusing to
+3. Writes the OpenCode plugin to `~/.config/opencode/plugins/amx.js`, refusing to
    overwrite a file it did not generate (marker comment on line 1).
 
 4. Prints what changed and tells you to run `tmux source-file`, restart Claude Code, and
@@ -339,8 +339,8 @@ duplicates them.
 ## 10. Repo layout
 
 ```
-amux/
-  cmd/amux/main.go            # command dispatch
+amx/
+  cmd/amx/main.go            # command dispatch
   internal/cli/               # pick, list, jump, kill, reset, ack, copy, focus, doctor
   internal/tmux/tmux.go       # list-panes, capture, jump, kill, hooks
   internal/state/store.go     # atomic read/write/prune
@@ -363,10 +363,10 @@ amux/
 6. Killing a pane removes its row on the next open; renaming a session or window is
    reflected immediately because names are read live.
 7. Pane ids reused after a tmux server restart never inherit old state.
-8. `ps` shows no amux process when the popup is closed.
+8. `ps` shows no amx process when the popup is closed.
 9. Plain shells are listed, selectable, and visually quieter than agent panes.
 10. Fuzzy search matches session name, window name, branch, and path.
-11. `amux setup --dry-run` changes nothing; running it twice produces no duplicates.
+11. `amx setup --dry-run` changes nothing; running it twice produces no duplicates.
 12. `go test ./...` covers state transitions, ordering, rendering, and target parsing.
 
 ## 12. Open items to verify during build

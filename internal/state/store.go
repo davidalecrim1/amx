@@ -69,13 +69,13 @@ type Store struct {
 
 func DefaultRoot() string {
 	if v := os.Getenv("XDG_STATE_HOME"); v != "" {
-		return filepath.Join(v, "amux")
+		return filepath.Join(v, "amx")
 	}
 	home, err := os.UserHomeDir()
 	if err != nil {
-		return filepath.Join(os.TempDir(), "amux")
+		return filepath.Join(os.TempDir(), "amx")
 	}
-	return filepath.Join(home, ".local", "state", "amux")
+	return filepath.Join(home, ".local", "state", "amx")
 }
 
 func NewStore(root string) *Store {

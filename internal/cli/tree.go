@@ -7,12 +7,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/davidalecrim1/amux/internal/render"
-	"github.com/davidalecrim1/amux/internal/target"
-	"github.com/davidalecrim1/amux/internal/tmux"
+	"github.com/davidalecrim1/amx/internal/render"
+	"github.com/davidalecrim1/amx/internal/target"
+	"github.com/davidalecrim1/amx/internal/tmux"
 )
 
-const treeStateEnv = "AMUX_TREE_STATE"
+const treeStateEnv = "AMX_TREE_STATE"
 
 func (a *App) foldCmd(args []string) int {
 	return a.toggleCmd(args, true)
@@ -67,7 +67,7 @@ func (a *App) applyFold(s *snapshot, path string, collapsed map[string]bool, t t
 	if err := saveCollapsed(path, collapsed); err != nil {
 		return 0
 	}
-	width, _ := strconv.Atoi(os.Getenv("AMUX_LIST_WIDTH"))
+	width, _ := strconv.Atoi(os.Getenv("AMX_LIST_WIDTH"))
 	rows := render.Rows(s.Panes, s.Records, render.Options{
 		Now:       a.Now(),
 		Branches:  branches(s.Panes),

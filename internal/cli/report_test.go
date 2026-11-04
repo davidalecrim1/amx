@@ -3,7 +3,7 @@ package cli
 import (
 	"testing"
 
-	"github.com/davidalecrim1/amux/internal/tmux"
+	"github.com/davidalecrim1/amx/internal/tmux"
 )
 
 func TestPickReportPane(t *testing.T) {

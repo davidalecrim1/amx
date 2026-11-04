@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/davidalecrim1/amux/internal/cli"
+	"github.com/davidalecrim1/amx/internal/cli"
 )
 
 func main() {

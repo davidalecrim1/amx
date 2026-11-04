@@ -3,8 +3,8 @@ package cli
 import (
 	"testing"
 
-	"github.com/davidalecrim1/amux/internal/target"
-	"github.com/davidalecrim1/amux/internal/tmux"
+	"github.com/davidalecrim1/amx/internal/target"
+	"github.com/davidalecrim1/amx/internal/tmux"
 )
 
 var panes = []tmux.Pane{

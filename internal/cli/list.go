@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/davidalecrim1/amux/internal/state"
-	"github.com/davidalecrim1/amux/internal/target"
-	"github.com/davidalecrim1/amux/internal/tmux"
+	"github.com/davidalecrim1/amx/internal/state"
+	"github.com/davidalecrim1/amx/internal/target"
+	"github.com/davidalecrim1/amx/internal/tmux"
 )
 
 func (a *App) list(args []string) int {
@@ -155,7 +155,7 @@ func (a *App) doctorCmd(args []string) int {
 	for _, name := range []string{"after-select-pane", "after-select-window", "client-session-changed"} {
 		status := "missing"
 		for _, line := range strings.Split(hooks, "\n") {
-			if strings.HasPrefix(line, name+"[") && strings.Contains(line, "amux") {
+			if strings.HasPrefix(line, name+"[") && strings.Contains(line, "amx") {
 				status = "installed"
 				break
 			}
@@ -166,20 +166,20 @@ func (a *App) doctorCmd(args []string) int {
 	home, _ := os.UserHomeDir()
 	settings := filepath.Join(home, ".claude", "settings.json")
 	if data, err := os.ReadFile(settings); err == nil {
-		if strings.Contains(string(data), "amux") {
+		if strings.Contains(string(data), "amx") {
 			fmt.Fprintln(a.Stdout, "claude hooks:      installed")
 		} else {
-			fmt.Fprintln(a.Stdout, "claude hooks:      missing (run amux setup)")
+			fmt.Fprintln(a.Stdout, "claude hooks:      missing (run amx setup)")
 		}
 	} else {
 		fmt.Fprintln(a.Stdout, "claude hooks:      no settings.json")
 	}
 
-	plugin := filepath.Join(home, ".config", "opencode", "plugins", "amux.js")
+	plugin := filepath.Join(home, ".config", "opencode", "plugins", "amx.js")
 	if _, err := os.Stat(plugin); err == nil {
 		fmt.Fprintln(a.Stdout, "opencode plugin:   installed")
 	} else {
-		fmt.Fprintln(a.Stdout, "opencode plugin:   missing (run amux setup)")
+		fmt.Fprintln(a.Stdout, "opencode plugin:   missing (run amx setup)")
 	}
 
 	if _, err := exec.LookPath("fzf"); err != nil {

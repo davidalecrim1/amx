@@ -28,7 +28,7 @@ func TestMergeClaudePreservesExistingAndIsIdempotent(t *testing.T) {
 	}
 
 	opts := Options{Home: home, Out: io.Discard}
-	if err := mergeClaude(path, "/bin/amux", opts); err != nil {
+	if err := mergeClaude(path, "/bin/amx", opts); err != nil {
 		t.Fatal(err)
 	}
 
@@ -58,7 +58,7 @@ func TestMergeClaudePreservesExistingAndIsIdempotent(t *testing.T) {
 		}
 	}
 
-	if err := mergeClaude(path, "/bin/amux", opts); err != nil {
+	if err := mergeClaude(path, "/bin/amx", opts); err != nil {
 		t.Fatal(err)
 	}
 	data2, _ := os.ReadFile(path)
@@ -70,7 +70,7 @@ func TestMergeClaudePreservesExistingAndIsIdempotent(t *testing.T) {
 		t.Fatalf("second run duplicated hooks: %d", len(hooks2["Stop"]))
 	}
 
-	backups, _ := filepath.Glob(path + ".amux-*.bak")
+	backups, _ := filepath.Glob(path + ".amx-*.bak")
 	if len(backups) != 1 {
 		t.Fatalf("expected one backup, got %v", backups)
 	}
@@ -79,14 +79,14 @@ func TestMergeClaudePreservesExistingAndIsIdempotent(t *testing.T) {
 func TestMergeClaudeCreatesMissingFile(t *testing.T) {
 	home := t.TempDir()
 	path := filepath.Join(home, ".claude", "settings.json")
-	if err := mergeClaude(path, "/bin/amux", Options{Home: home, Out: io.Discard}); err != nil {
+	if err := mergeClaude(path, "/bin/amx", Options{Home: home, Out: io.Discard}); err != nil {
 		t.Fatal(err)
 	}
 	data, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(string(data), "/bin/amux hook claude Stop") {
+	if !strings.Contains(string(data), "/bin/amx hook claude Stop") {
 		t.Fatalf("missing hook: %s", data)
 	}
 }
@@ -96,7 +96,7 @@ func TestSetupDryRunWritesNothing(t *testing.T) {
 	if err := Run(Options{Home: home, Out: io.Discard, DryRun: true}); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := os.Stat(filepath.Join(home, ".config", "amux", "tmux.conf")); !os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(home, ".config", "amx", "tmux.conf")); !os.IsNotExist(err) {
 		t.Fatal("dry run wrote the tmux snippet")
 	}
 	if _, err := os.Stat(filepath.Join(home, ".claude", "settings.json")); !os.IsNotExist(err) {
@@ -113,7 +113,7 @@ func TestEnsureSourceUsesTildeAndIsIdempotent(t *testing.T) {
 	if err := os.WriteFile(main, []byte("set -g mouse on\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	snippet := filepath.Join(home, ".config", "amux", "tmux.conf")
+	snippet := filepath.Join(home, ".config", "amx", "tmux.conf")
 	opts := Options{Home: home, Out: io.Discard}
 	if err := ensureSource(main, snippet, opts); err != nil {
 		t.Fatal(err)
@@ -122,7 +122,7 @@ func TestEnsureSourceUsesTildeAndIsIdempotent(t *testing.T) {
 		t.Fatal(err)
 	}
 	data, _ := os.ReadFile(main)
-	if got := strings.Count(string(data), "source-file ~/.config/amux/tmux.conf"); got != 1 {
+	if got := strings.Count(string(data), "source-file ~/.config/amx/tmux.conf"); got != 1 {
 		t.Fatalf("source line count = %d\n%s", got, data)
 	}
 	if !strings.Contains(string(data), "set -g mouse on") {
@@ -131,8 +131,8 @@ func TestEnsureSourceUsesTildeAndIsIdempotent(t *testing.T) {
 }
 
 func TestSnippetContent(t *testing.T) {
-	s := snippetContent("/bin/amux", true)
-	if !strings.Contains(s, "'/bin/amux pick'") {
+	s := snippetContent("/bin/amx", true)
+	if !strings.Contains(s, "'/bin/amx pick'") {
 		t.Fatalf("bind is malformed:\n%s", s)
 	}
 	if !strings.Contains(s, "-s 'bg=terminal'") {
@@ -147,7 +147,7 @@ func TestSnippetContent(t *testing.T) {
 	if !strings.Contains(s, "bind u run-shell -b") {
 		t.Fatalf("unread binding missing:\n%s", s)
 	}
-	old := snippetContent("/bin/amux", false)
+	old := snippetContent("/bin/amx", false)
 	if strings.Contains(old, "bg=terminal") {
 		t.Fatalf("old tmux should not get the terminal colour flag:\n%s", old)
 	}
@@ -181,14 +181,14 @@ func TestPluginTemplateTargetsV2(t *testing.T) {
 
 func TestPluginIsNotClobbered(t *testing.T) {
 	home := t.TempDir()
-	path := filepath.Join(home, ".config", "opencode", "plugins", "amux.js")
+	path := filepath.Join(home, ".config", "opencode", "plugins", "amx.js")
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(path, []byte("// hand written\nexport const X = 1\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := writePlugin(path, "/bin/amux", Options{Home: home, Out: io.Discard}); err != nil {
+	if err := writePlugin(path, "/bin/amx", Options{Home: home, Out: io.Discard}); err != nil {
 		t.Fatal(err)
 	}
 	data, _ := os.ReadFile(path)

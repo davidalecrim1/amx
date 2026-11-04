@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/davidalecrim1/amux/internal/state"
+	"github.com/davidalecrim1/amx/internal/state"
 )
 
 var now = time.Date(2026, 10, 26, 16, 0, 0, 0, time.UTC)

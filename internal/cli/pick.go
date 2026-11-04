@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/davidalecrim1/amux/internal/target"
+	"github.com/davidalecrim1/amx/internal/target"
 )
 
 func (a *App) pick(args []string) int {
@@ -17,11 +17,11 @@ func (a *App) pick(args []string) int {
 		return a.fail("%v", err)
 	}
 	if cols := terminalWidth(); cols > 0 {
-		os.Setenv("AMUX_LIST_WIDTH", strconv.Itoa(cols/2-2))
+		os.Setenv("AMX_LIST_WIDTH", strconv.Itoa(cols/2-2))
 	}
 	rows := a.renderRows(s, true)
 	if len(rows) == 0 {
-		fmt.Fprintln(a.Stderr, "amux: no tmux panes")
+		fmt.Fprintln(a.Stderr, "amx: no tmux panes")
 		return 0
 	}
 	exe, err := os.Executable()
@@ -29,10 +29,10 @@ func (a *App) pick(args []string) int {
 		return a.fail("%v", err)
 	}
 	bin := shellQuote(exe)
-	statePath := fmt.Sprintf("%s/amux-tree-%d.json", os.TempDir(), os.Getpid())
+	statePath := fmt.Sprintf("%s/amx-tree-%d.json", os.TempDir(), os.Getpid())
 	_ = os.Remove(statePath)
 	defer os.Remove(statePath)
-	sockPath := filepath.Join(os.TempDir(), fmt.Sprintf("amux-fzf-%d.sock", os.Getpid()))
+	sockPath := filepath.Join(os.TempDir(), fmt.Sprintf("amx-fzf-%d.sock", os.Getpid()))
 	_ = os.Remove(sockPath)
 	defer os.Remove(sockPath)
 
@@ -48,7 +48,7 @@ func (a *App) pick(args []string) int {
 		"--nth=1",
 		"--pointer=▌",
 		"--marker=┃",
-		"--prompt=amux> ",
+		"--prompt=amx> ",
 		"--preview=" + bin + " preview {2}",
 		"--preview-window=right:50%:border-left",
 		"--listen=" + sockPath,

@@ -6,8 +6,8 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/davidalecrim1/amux/internal/state"
-	"github.com/davidalecrim1/amux/internal/tmux"
+	"github.com/davidalecrim1/amx/internal/state"
+	"github.com/davidalecrim1/amx/internal/tmux"
 )
 
 func pane(session, win, paneIdx, id, cmd string, active, winActive bool) tmux.Pane {

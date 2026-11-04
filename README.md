@@ -1,4 +1,4 @@
-# amux
+# amx
 
 A tmux popup that shows which panes have an AI agent, what each one is doing, and which
 one is blocked waiting on you. `prefix+W` opens a searchable tree of every session,
@@ -7,7 +7,7 @@ window, and pane; Enter jumps to the one you picked.
 No daemon. No sidebar. No status-line clutter. Hooks write a small state file, the popup
 reads it.
 
-![amux picker showing a tmux session tree with agent states](assets/amux.png)
+![amx picker showing a tmux session tree with agent states](assets/amx.png)
 
 ```
 ▾ PROJ-123  🚨 NEEDS  api
@@ -33,7 +33,7 @@ finished, and which one is sitting on a permission prompt. A persistent sidebar 
 that by permanently stealing screen space and adding a daemon, an inbox, and a second
 status UI to keep in sync.
 
-amux solves only the lookup: press one key, see the state of the whole tmux server, type
+amx solves only the lookup: press one key, see the state of the whole tmux server, type
 to filter, jump.
 
 ## Features
@@ -66,19 +66,19 @@ to filter, jump.
 ## Install
 
 ```sh
-git clone https://github.com/davidalecrim1/amux
-cd amux
-make install       # builds to ~/.local/bin/amux; PREFIX=... overrides
-amux setup         # wires tmux, Claude Code, and OpenCode
+git clone https://github.com/davidalecrim1/amx
+cd amx
+make install       # builds to ~/.local/bin/amx; PREFIX=... overrides
+amx setup         # wires tmux, Claude Code, and OpenCode
 ```
 
-`amux setup` is idempotent and supports `--dry-run`. It:
+`amx setup` is idempotent and supports `--dry-run`. It:
 
-1. writes `~/.config/amux/tmux.conf` with the `prefix+W` binding and the three focus hooks;
+1. writes `~/.config/amx/tmux.conf` with the `prefix+W` binding and the three focus hooks;
 2. appends one `source-file` line to `~/.config/tmux/tmux.conf` (or `~/.tmux.conf`);
 3. merges the Claude Code hooks into `~/.claude/settings.json`, keeping existing handlers
    and writing a timestamped backup;
-4. writes the OpenCode v2 plugin to `~/.config/opencode/plugins/amux.js`.
+4. writes the OpenCode v2 plugin to `~/.config/opencode/plugins/amx.js`.
 
 Then reload tmux and restart Claude Code and OpenCode:
 
@@ -92,24 +92,24 @@ tmux source-file ~/.config/tmux/tmux.conf   # or ~/.tmux.conf
 `C-b`, then `W`. If you use `C-a`, press `C-a`, then `W`. The generated file is:
 
 ```tmux
-bind W display-popup -E -w 90% -h 85% -T ' Agent Multiplexer ' -b rounded -s 'bg=terminal' -S 'fg=brightblack' '~/.local/bin/amux pick'
-bind u run-shell -b "~/.local/bin/amux unread #{pane_id}"
-set-hook -g after-select-pane 'run-shell -b "~/.local/bin/amux focus #{pane_id}"'
-set-hook -g after-select-window 'run-shell -b "~/.local/bin/amux focus #{session_name}:#{window_index}"'
-set-hook -g client-session-changed 'run-shell -b "~/.local/bin/amux focus #{session_name}:#{window_index}"'
+bind W display-popup -E -w 90% -h 85% -T ' Agent Multiplexer ' -b rounded -s 'bg=terminal' -S 'fg=brightblack' '~/.local/bin/amx pick'
+bind u run-shell -b "~/.local/bin/amx unread #{pane_id}"
+set-hook -g after-select-pane 'run-shell -b "~/.local/bin/amx focus #{pane_id}"'
+set-hook -g after-select-window 'run-shell -b "~/.local/bin/amx focus #{session_name}:#{window_index}"'
+set-hook -g client-session-changed 'run-shell -b "~/.local/bin/amx focus #{session_name}:#{window_index}"'
 ```
 
-To use a different key, change `W` in `~/.config/amux/tmux.conf` and reload:
+To use a different key, change `W` in `~/.config/amx/tmux.conf` and reload:
 
 ```sh
-tmux source-file ~/.config/amux/tmux.conf
+tmux source-file ~/.config/amx/tmux.conf
 ```
 
 On tmux older than 3.8, setup omits `-s 'bg=terminal'` because the keyword does not exist
 there; it clears `popup-style` immediately before opening the popup instead, so tmux's
 default (the terminal background) applies.
 
-If you do not want `amux setup` to edit your configs, run `amux setup --dry-run` to see
+If you do not want `amx setup` to edit your configs, run `amx setup --dry-run` to see
 every change, then wire the lines above by hand.
 
 ## Keys
@@ -159,7 +159,7 @@ to `DONE` so they return to the top of the list.
 
 ### Claude Code
 
-`amux setup` installs handlers for `SessionStart`, `UserPromptSubmit`, `PreToolUse`,
+`amx setup` installs handlers for `SessionStart`, `UserPromptSubmit`, `PreToolUse`,
 `PostToolUse`, `PostToolUseFailure`, `PermissionRequest`, `PermissionDenied`,
 `Notification`, `Stop`, `StopFailure`, and `SessionEnd`.
 
@@ -183,7 +183,7 @@ plugin's project directory, preferring the pane that is actually running `openco
 ### Anything else
 
 ```sh
-echo '{"pane_id":"%3","agent":"aider","state":"running"}' | amux report
+echo '{"pane_id":"%3","agent":"aider","state":"running"}' | amx report
 ```
 
 Valid states are `needs_input`, `running`, `done_unseen`, `idle`, and `gone` (delete).
@@ -193,11 +193,11 @@ Valid states are `needs_input`, `running`, `done_unseen`, `idle`, and `gone` (de
 
 ```
 Claude hooks ─┐
-              ├─> amux hook / amux report ─> ~/.local/state/amux/<server-pid>/<pane>.json
+              ├─> amx hook / amx report ─> ~/.local/state/amx/<server-pid>/<pane>.json
 OpenCode  ────┘                                        │
                                                        ▼
-tmux list-panes -a ──────────────> amux pick (fzf) ─> jump / kill / reset / ack / copy
-tmux focus hooks ─> amux focus ──> state files
+tmux list-panes -a ──────────────> amx pick (fzf) ─> jump / kill / reset / ack / copy
+tmux focus hooks ─> amx focus ──> state files
 ```
 
 The picker reconciles at open time: records for panes that no longer exist are deleted,
@@ -207,7 +207,7 @@ per pane. Nothing survives the command.
 ## When something looks wrong
 
 ```sh
-amux doctor
+amx doctor
 ```
 
 It reports the binary and state paths, tracked records, orphaned records, whether the tmux

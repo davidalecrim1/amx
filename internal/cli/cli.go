@@ -13,9 +13,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/davidalecrim1/amux/internal/render"
-	"github.com/davidalecrim1/amux/internal/state"
-	"github.com/davidalecrim1/amux/internal/tmux"
+	"github.com/davidalecrim1/amx/internal/render"
+	"github.com/davidalecrim1/amx/internal/state"
+	"github.com/davidalecrim1/amx/internal/tmux"
 )
 
 type App struct {
@@ -76,33 +76,33 @@ func (a *App) Run(args []string) int {
 	case "setup":
 		return a.setupCmd(rest)
 	case "version":
-		fmt.Fprintln(a.Stdout, "amux 0.1.0")
+		fmt.Fprintln(a.Stdout, "amx 0.1.0")
 		return 0
 	case "help", "-h", "--help":
 		a.usage()
 		return 0
 	default:
-		fmt.Fprintf(a.Stderr, "amux: unknown command %q\n", cmd)
+		fmt.Fprintf(a.Stderr, "amx: unknown command %q\n", cmd)
 		a.usage()
 		return 1
 	}
 }
 
 func (a *App) usage() {
-	fmt.Fprint(a.Stderr, `amux - tmux agent status picker
+	fmt.Fprint(a.Stderr, `amx - tmux agent status picker
 
-  amux pick                      open the fzf tree (usually bound to prefix+W)
-  amux list [--ansi] [--json]    print the tree
-  amux jump <target>             switch to a session, window, or pane
-  amux kill <target>             kill a pane, window, or session
-  amux reset <target>            clear tracked state
-  amux ack <target>              clear done markers
-  amux unread <target>           mark idle agents as done-unseen
-  amux focus <pane-id>           tmux focus hook callback
-  amux hook claude <Event>       Claude Code hook adapter
-  amux report                    state writer (stdin JSON)
-  amux doctor                    diagnose pane/state mismatches
-  amux setup [--dry-run]         install tmux bindings, hooks, and plugins
+  amx pick                      open the fzf tree (usually bound to prefix+W)
+  amx list [--ansi] [--json]    print the tree
+  amx jump <target>             switch to a session, window, or pane
+  amx kill <target>             kill a pane, window, or session
+  amx reset <target>            clear tracked state
+  amx ack <target>              clear done markers
+  amx unread <target>           mark idle agents as done-unseen
+  amx focus <pane-id>           tmux focus hook callback
+  amx hook claude <Event>       Claude Code hook adapter
+  amx report                    state writer (stdin JSON)
+  amx doctor                    diagnose pane/state mismatches
+  amx setup [--dry-run]         install tmux bindings, hooks, and plugins
 `)
 }
 
@@ -173,7 +173,7 @@ func isLoginShell(cmd string) bool {
 }
 
 func (a *App) fail(format string, args ...any) int {
-	fmt.Fprintf(a.Stderr, "amux: "+format+"\n", args...)
+	fmt.Fprintf(a.Stderr, "amx: "+format+"\n", args...)
 	return 1
 }
 
@@ -223,7 +223,7 @@ func gitBranch(dir string) string {
 }
 
 func (a *App) renderRows(s *snapshot, ansi bool) []string {
-	width, _ := strconv.Atoi(os.Getenv("AMUX_LIST_WIDTH"))
+	width, _ := strconv.Atoi(os.Getenv("AMX_LIST_WIDTH"))
 	return render.Rows(s.Panes, s.Records, render.Options{
 		Now:       s.Now,
 		Branches:  branches(s.Panes),
