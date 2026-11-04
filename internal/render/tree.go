@@ -35,40 +35,69 @@ type Options struct {
 	Width     int
 }
 
-type colWidths struct {
+type table struct {
+	status int
+	age    int
+	ref    int
+	agent  int
 	branch int
-	path   int
-	window int
+	dir    int
 }
 
-// columnWidths adapts the flexible columns to the list width. Width is the
-// visible list width reported by the popup; zero falls back to the old fixed
-// sizes for `amux list` outside the picker.
-func columnWidths(width int) colWidths {
-	if width <= 0 {
-		return colWidths{branch: 16, path: 20, window: 40}
-	}
-	const fixed = 40
-	avail := width - fixed
-	if avail < 16 {
-		avail = 16
-	}
-	clamp := func(v, lo, hi int) int {
-		if v < lo {
-			return lo
-		}
+// buildTable sizes each column from the longest value, starting from a small
+// base and shrinking the flexible columns only when the row would not fit the
+// view. The last column is cut with an ellipsis by the renderer.
+func buildTable(panes []tmux.Pane, records map[string]state.Record, branches map[string]string, width int) table {
+	t := table{status: 10, age: 4, ref: 3, agent: 4, branch: 2, dir: 2}
+	clamp := func(v, hi int) int {
 		if v > hi {
 			return hi
 		}
 		return v
 	}
-	branch := clamp(avail*40/100, 8, 24)
-	path := clamp(avail-branch, 8, 24)
-	window := width - 12
-	if window < 12 {
-		window = 12
+	for _, p := range panes {
+		if n := utf8.RuneCountInString(p.WindowIndex + "." + p.PaneIndex); n > t.ref {
+			t.ref = clamp(n, 8)
+		}
+		name := p.PaneCommand
+		if r, ok := records[p.PaneID]; ok && r.Agent != "" {
+			name = r.Agent
+		}
+		if n := utf8.RuneCountInString(name); n > t.agent {
+			t.agent = clamp(n, 16)
+		}
+		b := branches[p.PaneID]
+		if b == "" {
+			b = "-"
+		}
+		if n := utf8.RuneCountInString(b); n > t.branch {
+			t.branch = clamp(n, 32)
+		}
+		if n := utf8.RuneCountInString(pathBase(p.PanePath)); n > t.dir {
+			t.dir = clamp(n, 28)
+		}
 	}
-	return colWidths{branch: branch, path: path, window: window}
+
+	const sep = 2
+	if width > 0 {
+		total := 8 + t.status + sep + t.age + sep + t.ref + sep + t.agent + sep + t.branch + sep + t.dir
+		mins := []int{4, 2, 2}
+		fields := []*int{&t.agent, &t.branch, &t.dir}
+		for total > width {
+			idx, size := -1, 0
+			for i := range fields {
+				if *fields[i] > mins[i] && *fields[i] > size {
+					idx, size = i, *fields[i]
+				}
+			}
+			if idx < 0 {
+				break
+			}
+			*fields[idx]--
+			total--
+		}
+	}
+	return t
 }
 
 type paneView struct {
@@ -106,6 +135,7 @@ func Rows(panes []tmux.Pane, records map[string]state.Record, opt Options) []str
 		opt.Now = time.Now()
 	}
 	sessions := group(panes, records, opt)
+	table := buildTable(panes, records, opt.Branches, opt.Width)
 
 	var out []string
 	for _, s := range sessions {
@@ -125,7 +155,7 @@ func Rows(panes []tmux.Pane, records map[string]state.Record, opt Options) []str
 			}
 			for pi, p := range w.panes {
 				lastPane := pi == len(w.panes)-1
-				out = append(out, renderPane(s, w, p, lastWin, lastPane, opt)+"\t"+target.Ref(target.Target{
+				out = append(out, renderPane(s, w, p, lastWin, lastPane, table, opt)+"\t"+target.Ref(target.Target{
 					Kind: target.Pane, PaneID: p.pane.PaneID,
 				}))
 			}
@@ -267,8 +297,10 @@ func renderWindow(s sessionView, w windowView, last bool, opt Options) string {
 	var b strings.Builder
 	b.WriteString(paint(opt, branch, faint))
 	b.WriteString(paint(opt, marker+" ", faint))
-	cw := columnWidths(opt.Width)
-	winWidth := cw.window
+	winWidth := 40
+	if opt.Width > 0 {
+		winWidth = opt.Width - 12
+	}
 	collapsed := w.hasAgent && opt.Collapsed[windowKey(s.name, w.index)]
 	if collapsed {
 		winWidth -= 12
@@ -286,7 +318,7 @@ func renderWindow(s sessionView, w windowView, last bool, opt Options) string {
 	return b.String()
 }
 
-func renderPane(s sessionView, w windowView, p paneView, lastWin, lastPane bool, opt Options) string {
+func renderPane(s sessionView, w windowView, p paneView, lastWin, lastPane bool, t table, opt Options) string {
 	indent := "  │   "
 	if lastWin {
 		indent = "      "
@@ -295,26 +327,24 @@ func renderPane(s sessionView, w windowView, p paneView, lastWin, lastPane bool,
 	if lastPane {
 		branch = "└─ "
 	}
+	const sep = "  "
 	var b strings.Builder
 	b.WriteString(paint(opt, indent+branch, faint))
 
 	if p.rec != nil {
 		b.WriteString(statusText(p.rec.State))
-		b.WriteString(" ")
-		b.WriteString(paint(opt, pad(FormatAge(opt.Now.Sub(p.rec.UpdatedAt)), 4), faint))
-		b.WriteString(" ")
-	} else {
-		b.WriteString("                ")
+		b.WriteString(sep)
+		b.WriteString(paint(opt, pad(FormatAge(opt.Now.Sub(p.rec.UpdatedAt)), t.age), faint))
+		b.WriteString(sep)
 	}
 
-	b.WriteString(paint(opt, pad(w.index+"."+p.pane.PaneIndex, 5), faint))
-	b.WriteString(" ")
-	b.WriteString(paint(opt, pad(truncate(agentName(p), 8), 8), cyan))
-	b.WriteString(" ")
-	cw := columnWidths(opt.Width)
-	b.WriteString(paint(opt, pad(truncate(branchName(p), cw.branch), cw.branch), magenta))
-	b.WriteString(" ")
-	b.WriteString(paint(opt, truncate(pathBase(p.pane.PanePath), cw.path), faint))
+	b.WriteString(paint(opt, pad(w.index+"."+p.pane.PaneIndex, t.ref), faint))
+	b.WriteString(sep)
+	b.WriteString(paint(opt, pad(truncate(agentName(p), t.agent), t.agent), cyan))
+	b.WriteString(sep)
+	b.WriteString(paint(opt, pad(truncate(branchName(p), t.branch), t.branch), magenta))
+	b.WriteString(sep)
+	b.WriteString(paint(opt, truncate(pathBase(p.pane.PanePath), t.dir), faint))
 	return strings.TrimRight(b.String(), " ")
 }
 

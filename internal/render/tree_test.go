@@ -131,17 +131,26 @@ func TestCollapsedWindowShowsAggregate(t *testing.T) {
 	}
 }
 
-func TestColumnWidthsAdapt(t *testing.T) {
-	def := columnWidths(0)
-	if def.branch != 16 || def.path != 20 {
-		t.Fatalf("default widths = %+v", def)
+func TestTableWidths(t *testing.T) {
+	now := time.Now()
+	_ = now
+	panes := []tmux.Pane{
+		{SessionName: "S", WindowIndex: "10", WindowName: "w", PaneID: "%1", PaneIndex: "10", PaneCommand: "opencode", PanePath: "/tmp/a"},
+		{SessionName: "S", WindowIndex: "0", WindowName: "w", PaneID: "%2", PaneIndex: "0", PaneCommand: "zsh", PanePath: "/tmp/a"},
 	}
-	cw := columnWidths(80)
-	if cw.branch == def.branch && cw.path == def.path {
-		t.Fatalf("widths did not adapt: %+v", cw)
+	records := map[string]state.Record{"%1": {Agent: "opencode"}}
+	tw := buildTable(panes, records, map[string]string{"%1": "main"}, 80)
+	if tw.ref < 5 || tw.agent < 8 {
+		t.Fatalf("content widths not used: %+v", tw)
 	}
-	if 40+cw.branch+cw.path > 80 {
-		t.Fatalf("columns overflow 80: %+v", cw)
+	total := 8 + tw.status + 2 + tw.age + 2 + tw.ref + 2 + tw.agent + 2 + tw.branch + 2 + tw.dir
+	if total > 80 {
+		t.Fatalf("table overflows: total=%d %+v", total, tw)
+	}
+
+	long := buildTable(panes, records, map[string]string{"%1": strings.Repeat("feature/", 10)}, 200)
+	if long.branch <= tw.branch {
+		t.Fatalf("long branch did not grow: %+v vs %+v", long, tw)
 	}
 }
 
