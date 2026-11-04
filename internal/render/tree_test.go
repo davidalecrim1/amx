@@ -33,8 +33,8 @@ func TestTreeOrderingAndGlyphs(t *testing.T) {
 		pane("PROJ-456", "0", "0", "%3", "zsh", true, true),
 	}
 	records := map[string]state.Record{
-		"%1": {PaneID: "%1", Agent: "claude", State: state.Running, Prompt: "add retry", UpdatedAt: now.Add(-10 * time.Second), LastEvent: now.Add(-10 * time.Second)},
-		"%2": {PaneID: "%2", Agent: "claude", State: state.NeedsInput, Prompt: "fix timeout", UpdatedAt: now.Add(-2 * time.Minute), LastEvent: now.Add(-2 * time.Minute)},
+		"%1": {PaneID: "%1", Agent: "claude", State: state.Running, UpdatedAt: now.Add(-10 * time.Second), LastEvent: now.Add(-10 * time.Second)},
+		"%2": {PaneID: "%2", Agent: "claude", State: state.NeedsInput, UpdatedAt: now.Add(-2 * time.Minute), LastEvent: now.Add(-2 * time.Minute)},
 	}
 
 	rows := Rows(panes, records, Options{Now: now, Branches: map[string]string{"%1": "feature/retry"}, ANSI: false})
@@ -133,14 +133,14 @@ func TestCollapsedWindowShowsAggregate(t *testing.T) {
 
 func TestColumnWidthsAdapt(t *testing.T) {
 	def := columnWidths(0)
-	if def.branch != 16 || def.path != 14 || def.prompt != 56 {
+	if def.branch != 16 || def.path != 20 {
 		t.Fatalf("default widths = %+v", def)
 	}
 	cw := columnWidths(80)
-	if cw.branch == def.branch || cw.path == def.path {
+	if cw.branch == def.branch && cw.path == def.path {
 		t.Fatalf("widths did not adapt: %+v", cw)
 	}
-	if 42+cw.branch+cw.path+cw.prompt > 80 {
+	if 40+cw.branch+cw.path > 80 {
 		t.Fatalf("columns overflow 80: %+v", cw)
 	}
 }

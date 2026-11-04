@@ -120,7 +120,6 @@ type reportInput struct {
 	Agent     string `json:"agent"`
 	State     string `json:"state"`
 	Detail    string `json:"detail"`
-	Prompt    string `json:"prompt"`
 	SessionID string `json:"session_id"`
 }
 
@@ -165,9 +164,6 @@ func (a *App) reportCmd(args []string) int {
 	}
 	if in.SessionID != "" {
 		rec.SessionID = in.SessionID
-	}
-	if in.Prompt != "" {
-		rec.Prompt = in.Prompt
 	}
 	rec.Detail = in.Detail
 	if rec.State != st || rec.UpdatedAt.IsZero() {

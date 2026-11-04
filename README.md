@@ -183,7 +183,7 @@ plugin's project directory, preferring the pane that is actually running `openco
 ### Anything else
 
 ```sh
-echo '{"pane_id":"%3","agent":"aider","state":"running","prompt":"fix the parser"}' | amux report
+echo '{"pane_id":"%3","agent":"aider","state":"running"}' | amux report
 ```
 
 Valid states are `needs_input`, `running`, `done_unseen`, `idle`, and `gone` (delete).

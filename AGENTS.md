@@ -141,7 +141,7 @@ These are easy to regress. Each one has a test or a documented reason.
   aggregates only when it has more than one agent or is collapsed; a window aggregates only
   when collapsed. There is no picker header; keep the surface minimal.
 - The picker exports `AMUX_LIST_WIDTH` from the popup's tty width; `amux list` uses it to
-  size the branch/path/prompt columns and truncate window names. Do not restore fixed
+  size the branch/path columns and truncate window names. Do not restore fixed
   widths.
 - The preview strips background SGR and every non-SGR escape, then cuts each line to
   `FZF_PREVIEW_COLUMNS - 1`. A TUI with a 200-column frame must not wrap into blocks.

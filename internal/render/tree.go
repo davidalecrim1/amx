@@ -38,7 +38,6 @@ type Options struct {
 type colWidths struct {
 	branch int
 	path   int
-	prompt int
 	window int
 }
 
@@ -47,12 +46,12 @@ type colWidths struct {
 // sizes for `amux list` outside the picker.
 func columnWidths(width int) colWidths {
 	if width <= 0 {
-		return colWidths{branch: 16, path: 14, prompt: 56, window: 40}
+		return colWidths{branch: 16, path: 20, window: 40}
 	}
-	const fixed = 42
+	const fixed = 40
 	avail := width - fixed
-	if avail < 12 {
-		avail = 12
+	if avail < 16 {
+		avail = 16
 	}
 	clamp := func(v, lo, hi int) int {
 		if v < lo {
@@ -63,17 +62,13 @@ func columnWidths(width int) colWidths {
 		}
 		return v
 	}
-	branch := clamp(avail*30/100, 6, 28)
-	path := clamp(avail*18/100, 4, 16)
-	prompt := avail - branch - path - 2
-	if prompt < 4 {
-		prompt = 4
-	}
+	branch := clamp(avail*40/100, 8, 24)
+	path := clamp(avail-branch, 8, 24)
 	window := width - 12
 	if window < 12 {
 		window = 12
 	}
-	return colWidths{branch: branch, path: path, prompt: prompt, window: window}
+	return colWidths{branch: branch, path: path, window: window}
 }
 
 type paneView struct {
@@ -319,26 +314,8 @@ func renderPane(s sessionView, w windowView, p paneView, lastWin, lastPane bool,
 	cw := columnWidths(opt.Width)
 	b.WriteString(paint(opt, pad(truncate(branchName(p), cw.branch), cw.branch), magenta))
 	b.WriteString(" ")
-	b.WriteString(paint(opt, pad(truncate(pathBase(p.pane.PanePath), cw.path), cw.path), faint))
-
-	if extra := paneExtra(p); extra != "" {
-		b.WriteString("  ")
-		b.WriteString(paint(opt, truncate(extra, cw.prompt), defaultFG))
-	}
+	b.WriteString(paint(opt, truncate(pathBase(p.pane.PanePath), cw.path), faint))
 	return strings.TrimRight(b.String(), " ")
-}
-
-func paneExtra(p paneView) string {
-	if p.rec == nil {
-		return ""
-	}
-	if p.rec.Prompt != "" {
-		return p.rec.Prompt
-	}
-	if p.rec.State == state.NeedsInput && p.rec.Detail != "" {
-		return p.rec.Detail
-	}
-	return ""
 }
 
 func agentName(p paneView) string {

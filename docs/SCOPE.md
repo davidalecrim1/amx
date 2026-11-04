@@ -76,7 +76,7 @@ Row anatomy:
 | --- | --- | --- |
 | session | `▾` (underlined name if attached here) | session name (bold), aggregate badge when it has more than one agent or is collapsed, path basename |
 | window | `├─` / `└─` + `▾` | window index, window name, aggregate badge only when collapsed |
-| pane | `├─` / `└─` | state badge for agent panes only, `window.pane`, agent or foreground command, git branch, cwd basename (`~` for `$HOME`), last prompt snippet, age |
+| pane | `├─` / `└─` | state badge for agent panes only, `window.pane`, agent or foreground command, git branch, cwd basename (`~` for `$HOME`), age |
 
 Session summary line is `#{session_path}` basename when it differs from the session name,
 otherwise omitted.
@@ -94,13 +94,13 @@ the scanning and the label stays in the terminal's default foreground.
 | IDLE | 💤 IDLE | agent is alive and waiting for a prompt |
 | none | blank | no agent in this pane |
 
-Column widths come from the popup width: the branch, path, and prompt share the space left
-after the fixed columns, and long branch and window names truncate with `…`. The marker is
+Column widths come from the popup width: the branch and path share the space left after the
+fixed columns, and long branch and window names truncate with `…`. The marker is
 padded to the width of `🏃 RUNNING` so the pane columns stay aligned. Status
 belongs to the agent pane: a window with one nvim pane and one opencode pane marks only the
 opencode row. A session shows its worst state when it contains more than one agent, or when
 it is collapsed; a window shows its state only when collapsed. Agent names are ANSI cyan,
-branches ANSI magenta, prompt snippets the default foreground, age faint. fzf runs with
+branches ANSI magenta, age faint. fzf runs with
 `--color=16` and default backgrounds, so its chrome comes from the same palette. There is no
 header; the list is the whole surface.
 
@@ -147,7 +147,7 @@ clears it; Esc with no filter quits. `q` quits in navigation mode and types norm
 search mode.
 
 In search mode fzf fuzzy matches the visible row text: session name, window name, agent
-name, branch, path, prompt snippet, and badge text. `NEEDS` finds everything blocked on
+name, branch, path, and badge text. `NEEDS` finds everything blocked on
 you.
 The list is regenerated on open and then every second while the popup is open, through fzf's
 `--listen` socket. Changes are visible without closing the picker, and fzf keeps the
@@ -173,7 +173,7 @@ The picker reconciles only against live tmux panes (see 5.4).
 | Hook event | Result |
 | --- | --- |
 | `SessionStart` | IDLE, register agent as `claude` |
-| `UserPromptSubmit` | RUNNING, store the prompt text |
+| `UserPromptSubmit` | RUNNING |
 | `PreToolUse`, `PostToolUse`, `PostToolUseFailure` | RUNNING, heartbeat |
 | `PermissionRequest` | NEEDS_INPUT, detail = tool name |
 | `PermissionDenied` | RUNNING |
@@ -212,8 +212,7 @@ subscribing to the OpenCode v2 public event stream and piping normalized JSON in
 | `session.error` | NEEDS_INPUT, detail = error |
 | `session.deleted` | delete the record |
 
-Prompt text is not available on these events, so the OpenCode row shows the directory
-basename and branch but no prompt snippet.
+OpenCode rows show the directory basename and branch, like every other row.
 
 ### 5.4 Staleness and reconciliation
 
@@ -275,7 +274,6 @@ branch lookup runs in parallel per pane with a 1.5 s cap; failures render `-`.
   "agent": "claude",
   "state": "needs_input",
   "session_id": "0f3c…",
-  "prompt": "fix the webhook timeout",
   "detail": "Bash",
   "updated_at": "2026-10-26T16:40:12Z",
   "last_event_at": "2026-10-26T16:40:12Z",
@@ -367,7 +365,7 @@ amux/
 7. Pane ids reused after a tmux server restart never inherit old state.
 8. `ps` shows no amux process when the popup is closed.
 9. Plain shells are listed, selectable, and visually quieter than agent panes.
-10. Fuzzy search matches session name, window name, branch, path, and prompt snippet.
+10. Fuzzy search matches session name, window name, branch, and path.
 11. `amux setup --dry-run` changes nothing; running it twice produces no duplicates.
 12. `go test ./...` covers state transitions, ordering, rendering, and target parsing.
 
