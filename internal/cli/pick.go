@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/davidalecrim1/amux/internal/target"
@@ -14,6 +15,9 @@ func (a *App) pick(args []string) int {
 	s, err := a.load(true)
 	if err != nil {
 		return a.fail("%v", err)
+	}
+	if cols := terminalWidth(); cols > 0 {
+		os.Setenv("AMUX_LIST_WIDTH", strconv.Itoa(cols/2-2))
 	}
 	rows := a.renderRows(s, true)
 	if len(rows) == 0 {

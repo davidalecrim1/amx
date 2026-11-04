@@ -46,6 +46,8 @@ to filter, jump.
 - Live preview of the highlighted pane, with terminal backgrounds stripped and lines cut
   to the preview width so a full-screen TUI cannot paint over the popup.
 - Modal input: the picker opens in navigation mode, and `/` reveals the search field.
+- Column widths adapt to the popup. Long branch and window names truncate with `…` instead of
+  spilling into the preview.
 - Uses the terminal's ANSI palette and default background, so it follows whatever theme
   (and transparency) the terminal is configured with.
 - No background process. State files are namespaced by tmux server PID, so a tmux restart

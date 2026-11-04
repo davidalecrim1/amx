@@ -94,7 +94,9 @@ the scanning and the label stays in the terminal's default foreground.
 | IDLE | 💤 IDLE | agent is alive and waiting for a prompt |
 | none | blank | no agent in this pane |
 
-The marker is padded to the width of `🏃 RUNNING` so the pane columns stay aligned. Status
+Column widths come from the popup width: the branch, path, and prompt share the space left
+after the fixed columns, and long branch and window names truncate with `…`. The marker is
+padded to the width of `🏃 RUNNING` so the pane columns stay aligned. Status
 belongs to the agent pane: a window with one nvim pane and one opencode pane marks only the
 opencode row. A session shows its worst state when it contains more than one agent, or when
 it is collapsed; a window shows its state only when collapsed. Agent names are ANSI cyan,

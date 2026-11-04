@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"unicode/utf8"
 
 	"github.com/davidalecrim1/amux/internal/state"
 	"github.com/davidalecrim1/amux/internal/tmux"
@@ -126,6 +127,59 @@ func TestCollapsedWindowShowsAggregate(t *testing.T) {
 	for _, r := range rows {
 		if strings.HasSuffix(r, "\tw:S:0") && !strings.Contains(r, "RUNNING") {
 			t.Fatalf("collapsed window should show its state: %q", r)
+		}
+	}
+}
+
+func TestColumnWidthsAdapt(t *testing.T) {
+	def := columnWidths(0)
+	if def.branch != 16 || def.path != 14 || def.prompt != 56 {
+		t.Fatalf("default widths = %+v", def)
+	}
+	cw := columnWidths(80)
+	if cw.branch == def.branch || cw.path == def.path {
+		t.Fatalf("widths did not adapt: %+v", cw)
+	}
+	if 42+cw.branch+cw.path+cw.prompt > 80 {
+		t.Fatalf("columns overflow 80: %+v", cw)
+	}
+}
+
+func TestLongWindowAndBranchTruncate(t *testing.T) {
+	now := time.Now()
+	p := tmux.Pane{
+		SessionName: "S", SessionPath: "/tmp/s",
+		WindowIndex: "0", WindowName: strings.Repeat("window-name-", 8),
+		PaneID: "%1", PaneIndex: "0", PaneCommand: "opencode",
+		PanePath: "/tmp/s/very-long-directory-name", PaneActive: true, WindowActive: true,
+	}
+	records := map[string]state.Record{
+		"%1": {PaneID: "%1", Agent: "opencode", State: state.Running, UpdatedAt: now, LastEvent: now},
+	}
+	rows := Rows([]tmux.Pane{p}, records, Options{
+		Now: now, ANSI: false, Width: 60,
+		Branches: map[string]string{"%1": strings.Repeat("feature/branch-", 8)},
+	})
+	for _, r := range rows {
+		visible := r
+		if i := strings.LastIndex(r, "\t"); i >= 0 {
+			visible = r[:i]
+		}
+		if strings.HasSuffix(r, "\tw:S:0") {
+			if !strings.Contains(r, "…") {
+				t.Fatalf("long window name was not truncated: %q", r)
+			}
+			if utf8.RuneCountInString(visible) > 60 {
+				t.Fatalf("window row overflows: %d %q", utf8.RuneCountInString(visible), r)
+			}
+		}
+		if strings.HasSuffix(r, "\tp:%1") {
+			if !strings.Contains(r, "…") {
+				t.Fatalf("long branch was not truncated: %q", r)
+			}
+			if utf8.RuneCountInString(visible) > 60 {
+				t.Fatalf("pane row overflows: %d %q", utf8.RuneCountInString(visible), r)
+			}
 		}
 	}
 }

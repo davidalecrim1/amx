@@ -32,6 +32,48 @@ type Options struct {
 	Branches  map[string]string
 	ANSI      bool
 	Collapsed map[string]bool
+	Width     int
+}
+
+type colWidths struct {
+	branch int
+	path   int
+	prompt int
+	window int
+}
+
+// columnWidths adapts the flexible columns to the list width. Width is the
+// visible list width reported by the popup; zero falls back to the old fixed
+// sizes for `amux list` outside the picker.
+func columnWidths(width int) colWidths {
+	if width <= 0 {
+		return colWidths{branch: 16, path: 14, prompt: 56, window: 40}
+	}
+	const fixed = 42
+	avail := width - fixed
+	if avail < 12 {
+		avail = 12
+	}
+	clamp := func(v, lo, hi int) int {
+		if v < lo {
+			return lo
+		}
+		if v > hi {
+			return hi
+		}
+		return v
+	}
+	branch := clamp(avail*30/100, 6, 28)
+	path := clamp(avail*18/100, 4, 16)
+	prompt := avail - branch - path - 2
+	if prompt < 4 {
+		prompt = 4
+	}
+	window := width - 12
+	if window < 12 {
+		window = 12
+	}
+	return colWidths{branch: branch, path: path, prompt: prompt, window: window}
 }
 
 type paneView struct {
@@ -230,10 +272,19 @@ func renderWindow(s sessionView, w windowView, last bool, opt Options) string {
 	var b strings.Builder
 	b.WriteString(paint(opt, branch, faint))
 	b.WriteString(paint(opt, marker+" ", faint))
+	cw := columnWidths(opt.Width)
+	winWidth := cw.window
+	collapsed := w.hasAgent && opt.Collapsed[windowKey(s.name, w.index)]
+	if collapsed {
+		winWidth -= 12
+	}
+	if winWidth < 12 {
+		winWidth = 12
+	}
 	b.WriteString(paint(opt, w.index, bold+defaultFG))
 	b.WriteString(" ")
-	b.WriteString(paint(opt, w.name, faint))
-	if w.hasAgent && opt.Collapsed[windowKey(s.name, w.index)] {
+	b.WriteString(paint(opt, truncate(w.name, winWidth), faint))
+	if collapsed {
 		b.WriteString("  ")
 		b.WriteString(statusText(state.State(rankState(w.rank))))
 	}
@@ -265,13 +316,14 @@ func renderPane(s sessionView, w windowView, p paneView, lastWin, lastPane bool,
 	b.WriteString(" ")
 	b.WriteString(paint(opt, pad(truncate(agentName(p), 8), 8), cyan))
 	b.WriteString(" ")
-	b.WriteString(paint(opt, pad(truncate(branchName(p), 16), 16), magenta))
+	cw := columnWidths(opt.Width)
+	b.WriteString(paint(opt, pad(truncate(branchName(p), cw.branch), cw.branch), magenta))
 	b.WriteString(" ")
-	b.WriteString(paint(opt, pad(truncate(pathBase(p.pane.PanePath), 14), 14), faint))
+	b.WriteString(paint(opt, pad(truncate(pathBase(p.pane.PanePath), cw.path), cw.path), faint))
 
 	if extra := paneExtra(p); extra != "" {
 		b.WriteString("  ")
-		b.WriteString(paint(opt, truncate(extra, 56), defaultFG))
+		b.WriteString(paint(opt, truncate(extra, cw.prompt), defaultFG))
 	}
 	return strings.TrimRight(b.String(), " ")
 }

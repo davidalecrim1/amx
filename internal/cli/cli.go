@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -222,11 +223,13 @@ func gitBranch(dir string) string {
 }
 
 func (a *App) renderRows(s *snapshot, ansi bool) []string {
+	width, _ := strconv.Atoi(os.Getenv("AMUX_LIST_WIDTH"))
 	return render.Rows(s.Panes, s.Records, render.Options{
 		Now:       s.Now,
 		Branches:  branches(s.Panes),
 		ANSI:      ansi,
 		Collapsed: loadCollapsed(os.Getenv(treeStateEnv)),
+		Width:     width,
 	})
 }
 
