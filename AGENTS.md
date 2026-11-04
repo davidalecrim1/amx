@@ -77,6 +77,8 @@ tmux focus hooks ─> amux focus ──> state files
   exists.
 - The renderer never draws status from process names or pane contents. If a hook did not
   report it, it is not known.
+- Focus clears DONE_UNSEEN to IDLE. `amux unread` is the only path back: it promotes IDLE
+  to DONE_UNSEEN and leaves RUNNING and NEEDS_INPUT alone.
 - Dependencies: standard library only. Do not add modules.
 
 ## Hard-won details

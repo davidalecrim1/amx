@@ -54,6 +54,8 @@ func (a *App) Run(args []string) int {
 		return a.resetCmd(rest)
 	case "ack":
 		return a.ackCmd(rest)
+	case "unread":
+		return a.unreadCmd(rest)
 	case "copy":
 		return a.copyCmd(rest)
 	case "focus":
@@ -94,6 +96,7 @@ func (a *App) usage() {
   amux kill <target>             kill a pane, window, or session
   amux reset <target>            clear tracked state
   amux ack <target>              clear done markers
+  amux unread <target>           mark idle agents as done-unseen
   amux focus <pane-id>           tmux focus hook callback
   amux hook claude <Event>       Claude Code hook adapter
   amux report                    state writer (stdin JSON)

@@ -105,6 +105,17 @@ func (a *App) resetCmd(args []string) int {
 	})
 }
 
+func (a *App) unreadCmd(args []string) int {
+	return a.mutateTargets(args, "unread", func(rec *state.Record) bool {
+		if rec.State != state.Idle {
+			return false
+		}
+		rec.State = state.DoneUnseen
+		rec.UpdatedAt = a.Now()
+		return true
+	})
+}
+
 func (a *App) ackCmd(args []string) int {
 	return a.mutateTargets(args, "ack", func(rec *state.Record) bool {
 		if rec.State != state.DoneUnseen {

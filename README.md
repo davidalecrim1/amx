@@ -91,6 +91,7 @@ tmux source-file ~/.config/tmux/tmux.conf   # or ~/.tmux.conf
 
 ```tmux
 bind W display-popup -E -w 90% -h 85% -T ' Agent Multiplexer ' -b rounded -s 'bg=terminal' -S 'fg=brightblack' '~/.local/bin/amux pick'
+bind u run-shell -b "~/.local/bin/amux unread #{pane_id}"
 set-hook -g after-select-pane 'run-shell -b "~/.local/bin/amux focus #{pane_id}"'
 set-hook -g after-select-window 'run-shell -b "~/.local/bin/amux focus #{session_name}:#{window_index}"'
 set-hook -g client-session-changed 'run-shell -b "~/.local/bin/amux focus #{session_name}:#{window_index}"'
@@ -127,6 +128,7 @@ search mode.
 | `Ctrl-X` | kill the selected target (asks y/N) |
 | `Ctrl-R` | reset tracked state to idle |
 | `Ctrl-A` | acknowledge a done marker |
+| `Ctrl-U` | mark the selected target unread again (idle agents only) |
 | `Ctrl-Y` | copy `session:window.pane` |
 | `Ctrl-O` | copy the pane's working directory |
 
@@ -147,7 +149,9 @@ agent's pane, not on the window above it: a window with one nvim pane and one op
 badges only the opencode row. A session shows its worst state when it contains more than one
 agent, or when it is collapsed; a window shows its state only when collapsed. Focusing a pane
 clears `DONE` through tmux hooks. `Ctrl-A` clears it without visiting. A finish inside the
-pane you are currently looking at is recorded as idle immediately.
+pane you are currently looking at is recorded as idle immediately. To flag an agent again
+after reading it, press `prefix+u` in its pane or `Ctrl-U` on its row: idle agents go back
+to `DONE` so they return to the top of the list.
 
 ## Agents
 

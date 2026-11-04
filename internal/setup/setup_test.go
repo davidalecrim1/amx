@@ -144,6 +144,9 @@ func TestSnippetContent(t *testing.T) {
 	if !strings.Contains(s, "-S 'fg=brightblack'") {
 		t.Fatalf("popup border style missing:\n%s", s)
 	}
+	if !strings.Contains(s, "bind u run-shell -b") {
+		t.Fatalf("unread binding missing:\n%s", s)
+	}
 	old := snippetContent("/bin/amux", false)
 	if strings.Contains(old, "bg=terminal") {
 		t.Fatalf("old tmux should not get the terminal colour flag:\n%s", old)

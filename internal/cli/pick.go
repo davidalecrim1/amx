@@ -63,6 +63,7 @@ func (a *App) pick(args []string) int {
 		"--bind=ctrl-x:execute(" + bin + " kill {2})+reload(" + bin + " list --ansi)",
 		"--bind=ctrl-r:execute-silent(" + bin + " reset {2})+reload(" + bin + " list --ansi)",
 		"--bind=ctrl-a:execute-silent(" + bin + " ack {2})+reload(" + bin + " list --ansi)",
+		"--bind", fmt.Sprintf(`ctrl-u:transform:if [ "$FZF_INPUT_STATE" = enabled ]; then echo unix-line-discard; else echo "execute-silent(%s unread {2})+reload(%s list --ansi)"; fi`, bin, bin),
 		"--bind=ctrl-y:execute-silent(" + bin + " copy {2})",
 		"--bind=ctrl-o:execute-silent(" + bin + " copy --cwd {2})",
 	}

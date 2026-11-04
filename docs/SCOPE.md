@@ -128,6 +128,7 @@ every redraw.
 | Ctrl-X | kill the selected pane, window, or session, after a y/N confirmation |
 | Ctrl-R | reset the selected target's tracked state to IDLE |
 | Ctrl-A | acknowledge DONE_UNSEEN on the selected target, clearing the marker |
+| Ctrl-U | mark the selected target unread: IDLE becomes DONE_UNSEEN |
 | Ctrl-Y | copy the target ref (`session:window.pane`) to the clipboard |
 | Ctrl-O | copy the pane's cwd to the clipboard |
 | Esc | leave search mode; when already navigating, quit |
@@ -234,6 +235,10 @@ session:window>`, which clears the marker and stamps `last_focus_at`. `Ctrl-A`
 acknowledges without visiting. A `Stop` inside the pane you are currently looking at is
 recorded as IDLE immediately, so watching an agent finish never leaves a stale `DONE`.
 
+The reverse is explicit: `amux unread <target>` promotes IDLE to DONE_UNSEEN and bumps
+`updated_at`. It never touches RUNNING or NEEDS_INPUT. `prefix+u` runs it for the current
+pane; `Ctrl-U` runs it for the selected picker row.
+
 ### 5.5 Age
 
 Age is time since the state last changed (`updated_at`), formatted `12s`, `4m`, `2h`, `3d`.
@@ -308,6 +313,7 @@ before editing:
 
 ```tmux
 bind W display-popup -E -w 90% -h 85% -T ' Agent Multiplexer ' -b rounded -s 'bg=terminal' -S 'fg=brightblack' '~/.local/bin/amux pick'
+bind u run-shell -b "~/.local/bin/amux unread #{pane_id}"
 set-hook -g after-select-pane   'run-shell -b "~/.local/bin/amux focus #{pane_id}"'
 set-hook -g after-select-window 'run-shell -b "~/.local/bin/amux focus #{pane_id}"'
 set-hook -g client-session-changed 'run-shell -b "~/.local/bin/amux focus #{pane_id}"'
