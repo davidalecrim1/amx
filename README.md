@@ -127,7 +127,8 @@ search mode.
 | `q` | quit while navigating |
 | `Esc` | hide the input and keep the filter; with a filter applied, clear it; with no filter, quit |
 | `Enter` | jump to the selected session, window, or pane |
-| `Ctrl-X` | kill the selected target (asks y/N) |
+| `x` | kill the selected pane, window, or session immediately |
+| `Ctrl-X` | same as `x` |
 | `Ctrl-R` | reset tracked state to idle |
 | `Ctrl-A` | acknowledge a done marker |
 | `Ctrl-U` | mark the selected target unread again (idle agents only) |

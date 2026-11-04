@@ -127,7 +127,7 @@ every redraw.
 | `/` | reveal the input and enter search mode |
 | `q` | quit while navigating |
 | Enter | jump to the selected session, window, or pane and close the popup |
-| Ctrl-X | kill the selected pane, window, or session, after a y/N confirmation |
+| `x` / Ctrl-X | kill the selected pane, window, or session immediately |
 | Ctrl-R | reset the selected target's tracked state to IDLE |
 | Ctrl-A | acknowledge DONE_UNSEEN on the selected target, clearing the marker |
 | Ctrl-U | mark the selected target unread: IDLE becomes DONE_UNSEEN |
