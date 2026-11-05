@@ -94,6 +94,10 @@ func buildTable(panes []tmux.Pane, records map[string]state.Record, branches map
 			mins = append(mins, 4)
 			fields = append(fields, &t.title)
 		}
+		for total > width && t.title > 4 {
+			t.title--
+			total--
+		}
 		for total > width {
 			idx, size := -1, 0
 			for i := range fields {
