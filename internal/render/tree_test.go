@@ -193,6 +193,33 @@ func TestLongWindowAndBranchTruncate(t *testing.T) {
 	}
 }
 
+func TestTitleColumn(t *testing.T) {
+	now := time.Now()
+	panes := []tmux.Pane{
+		pane("S", "0", "0", "%1", "opencode", true, true),
+		pane("S", "0", "1", "%2", "zsh", false, true),
+	}
+	records := map[string]state.Record{
+		"%1": {PaneID: "%1", Agent: "opencode", State: state.Running, Title: "Define tmux agent status project scope", UpdatedAt: now, LastEvent: now},
+	}
+	rows := Rows(panes, records, Options{Now: now, ANSI: false, Width: 100})
+	for _, r := range rows {
+		if strings.HasSuffix(r, "\tp:%1") && !strings.Contains(r, "Define tmux agent status") {
+			t.Fatalf("title missing: %q", r)
+		}
+		if strings.HasSuffix(r, "\tp:%2") && strings.Contains(r, "Define tmux agent status") {
+			t.Fatalf("shell row should have no title: %q", r)
+		}
+	}
+
+	rows = Rows(panes, records, Options{Now: now, ANSI: false, Width: 60})
+	for _, r := range rows {
+		if strings.HasSuffix(r, "\tp:%1") && !strings.Contains(r, "…") {
+			t.Fatalf("long title should truncate: %q", r)
+		}
+	}
+}
+
 func TestAgeFormats(t *testing.T) {
 	cases := map[time.Duration]string{
 		5 * time.Second:  "5s",

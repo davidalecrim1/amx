@@ -49,8 +49,8 @@ type Record struct {
 	Agent     string    `json:"agent"`
 	State     State     `json:"state"`
 	SessionID string    `json:"session_id,omitempty"`
-	Prompt    string    `json:"prompt,omitempty"`
 	Detail    string    `json:"detail,omitempty"`
+	Title     string    `json:"title,omitempty"`
 	UpdatedAt time.Time `json:"updated_at"`
 	LastEvent time.Time `json:"last_event_at"`
 	LastFocus time.Time `json:"last_focus_at"`

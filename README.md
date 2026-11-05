@@ -46,8 +46,9 @@ to filter, jump.
 - Live preview of the highlighted pane, with terminal backgrounds stripped and lines cut
   to the preview width so a full-screen TUI cannot paint over the popup.
 - Modal input: the picker opens in navigation mode, and `/` reveals the search field.
-- Column widths adapt to the popup. Long branch and window names truncate with `…` instead of
-  spilling into the preview.
+- Column widths adapt to the content. Long branch, title, and window names truncate with `…`
+  instead of spilling into the preview.
+- Session title as the last column: OpenCode's real session title, or Claude's first prompt.
 - Uses the terminal's ANSI palette and default background, so it follows whatever theme
   (and transparency) the terminal is configured with.
 - No background process. State files are namespaced by tmux server PID, so a tmux restart
@@ -184,7 +185,7 @@ plugin's project directory, preferring the pane that is actually running `openco
 ### Anything else
 
 ```sh
-echo '{"pane_id":"%3","agent":"aider","state":"running"}' | amx report
+echo '{"pane_id":"%3","agent":"aider","state":"running","title":"fix the parser"}' | amx report
 ```
 
 Valid states are `needs_input`, `running`, `done_unseen`, `idle`, and `gone` (delete).

@@ -120,6 +120,7 @@ type reportInput struct {
 	Agent     string `json:"agent"`
 	State     string `json:"state"`
 	Detail    string `json:"detail"`
+	Title     string `json:"title"`
 	SessionID string `json:"session_id"`
 }
 
@@ -166,6 +167,9 @@ func (a *App) reportCmd(args []string) int {
 		rec.SessionID = in.SessionID
 	}
 	rec.Detail = in.Detail
+	if in.Title != "" {
+		rec.Title = in.Title
+	}
 	if rec.State != st || rec.UpdatedAt.IsZero() {
 		rec.State = st
 		rec.UpdatedAt = now

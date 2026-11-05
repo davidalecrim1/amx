@@ -12,6 +12,7 @@ var now = time.Date(2026, 10, 26, 16, 0, 0, 0, time.UTC)
 func TestPromptStartsRunning(t *testing.T) {
 	rec := &state.Record{State: state.DoneUnseen}
 	res := ApplyClaude("UserPromptSubmit", map[string]any{
+		"prompt":     "fix   the\nwebhook",
 		"session_id": "abc",
 	}, rec, now)
 
@@ -23,6 +24,13 @@ func TestPromptStartsRunning(t *testing.T) {
 	}
 	if rec.Agent != "claude" || rec.SessionID != "abc" {
 		t.Fatalf("agent/session not recorded: %+v", rec)
+	}
+	if rec.Title != "fix the webhook" {
+		t.Fatalf("title = %q", rec.Title)
+	}
+	ApplyClaude("UserPromptSubmit", map[string]any{"prompt": "another task"}, rec, now)
+	if rec.Title != "fix the webhook" {
+		t.Fatalf("title should keep the first prompt, got %q", rec.Title)
 	}
 	if !rec.UpdatedAt.Equal(now) {
 		t.Fatalf("updated_at = %v", rec.UpdatedAt)

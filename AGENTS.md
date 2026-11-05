@@ -136,6 +136,8 @@ These are easy to regress. Each one has a test or a documented reason.
 
 - ANSI 16-color palette only: red 31, green 32, blue 34, magenta 35, cyan 36, faint 2,
   reverse 7, default fg 39. Never hardcode truecolor; the terminal theme decides the shades.
+- The last pane column is the session title. Claude stores the first prompt as the title;
+  OpenCode sends the real session title from `ctx.session.get`/`session.updated`.
 - State markers are an emoji plus an uppercase word (`🚨 NEEDS`, `🏃 RUNNING`, `✅ DONE`,
   `💤 IDLE`), never a background colour. Only the agent pane carries a marker. A session
   aggregates only when it has more than one agent or is collapsed; a window aggregates only

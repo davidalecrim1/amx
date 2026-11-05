@@ -42,6 +42,7 @@ type table struct {
 	agent  int
 	branch int
 	dir    int
+	title  int
 }
 
 // buildTable sizes each column from the longest value, starting from a small
@@ -76,6 +77,11 @@ func buildTable(panes []tmux.Pane, records map[string]state.Record, branches map
 		if n := utf8.RuneCountInString(pathBase(p.PanePath)); n > t.dir {
 			t.dir = clamp(n, 28)
 		}
+		if r, ok := records[p.PaneID]; ok {
+			if n := utf8.RuneCountInString(r.Title); n > t.title {
+				t.title = clamp(n, 40)
+			}
+		}
 	}
 
 	const sep = 2
@@ -83,6 +89,11 @@ func buildTable(panes []tmux.Pane, records map[string]state.Record, branches map
 		total := 8 + t.status + sep + t.age + sep + t.ref + sep + t.agent + sep + t.branch + sep + t.dir
 		mins := []int{4, 2, 2}
 		fields := []*int{&t.agent, &t.branch, &t.dir}
+		if t.title > 0 {
+			total += sep + t.title
+			mins = append(mins, 4)
+			fields = append(fields, &t.title)
+		}
 		for total > width {
 			idx, size := -1, 0
 			for i := range fields {
@@ -350,6 +361,10 @@ func renderPane(s sessionView, w windowView, p paneView, lastWin, lastPane bool,
 	b.WriteString(paint(opt, pad(truncate(branchName(p), t.branch), t.branch), magenta))
 	b.WriteString(sep)
 	b.WriteString(paint(opt, truncate(pathBase(p.pane.PanePath), t.dir), faint))
+	if p.rec != nil && p.rec.Title != "" && t.title > 0 {
+		b.WriteString(sep)
+		b.WriteString(paint(opt, truncate(p.rec.Title, t.title), defaultFG))
+	}
 	return strings.TrimRight(b.String(), " ")
 }
 

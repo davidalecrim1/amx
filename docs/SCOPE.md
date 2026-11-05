@@ -76,7 +76,7 @@ Row anatomy:
 | --- | --- | --- |
 | session | `▾` (underlined name if attached here) | session name (bold), aggregate badge when it has more than one agent or is collapsed, path basename |
 | window | `├─` / `└─` + `▾` | window index, window name, aggregate badge only when collapsed |
-| pane | `├─` / `└─` | state badge for agent panes only, `window.pane`, agent or foreground command, git branch, cwd basename (`~` for `$HOME`), age |
+| pane | `├─` / `└─` | state badge for agent panes only, `window.pane`, agent or foreground command, git branch, cwd basename (`~` for `$HOME`), age, session title |
 
 Session summary line is `#{session_path}` basename when it differs from the session name,
 otherwise omitted.
@@ -94,8 +94,9 @@ the scanning and the label stays in the terminal's default foreground.
 | IDLE | 💤 IDLE | agent is alive and waiting for a prompt |
 | none | blank | no agent in this pane |
 
-Column widths come from the popup width: the branch and path share the space left after the
-fixed columns, and long branch and window names truncate with `…`. The marker is
+Column widths come from the content: each column starts at a small base and grows to the
+longest current value. The title is the last column and only appears on agent rows. Long
+branch, title, and window names truncate with `…` when the table does not fit the popup. The marker is
 padded to the width of `🏃 RUNNING` so the pane columns stay aligned. Status
 belongs to the agent pane: a window with one nvim pane and one opencode pane marks only the
 opencode row. A session shows its worst state when it contains more than one agent, or when
@@ -147,7 +148,7 @@ clears it; Esc with no filter quits. `q` quits in navigation mode and types norm
 search mode.
 
 In search mode fzf fuzzy matches the visible row text: session name, window name, agent
-name, branch, path, and badge text. `NEEDS` finds everything blocked on
+name, branch, path, title, and badge text. `NEEDS` finds everything blocked on
 you.
 The list is regenerated on open and then every second while the popup is open, through fzf's
 `--listen` socket. Changes are visible without closing the picker, and fzf keeps the
@@ -173,7 +174,7 @@ The picker reconciles only against live tmux panes (see 5.4).
 | Hook event | Result |
 | --- | --- |
 | `SessionStart` | IDLE, register agent as `claude` |
-| `UserPromptSubmit` | RUNNING |
+| `UserPromptSubmit` | RUNNING, first prompt kept as the session title |
 | `PreToolUse`, `PostToolUse`, `PostToolUseFailure` | RUNNING, heartbeat |
 | `PermissionRequest` | NEEDS_INPUT, detail = tool name |
 | `PermissionDenied` | RUNNING |
@@ -206,6 +207,7 @@ subscribing to the OpenCode v2 public event stream and piping normalized JSON in
 | `session.execution.started` | RUNNING |
 | `session.execution.succeeded`, `interrupted` | DONE_UNSEEN |
 | `session.execution.failed` | NEEDS_INPUT, detail = error type |
+| `session.updated` / `ctx.session.get` | session title |
 | `permission.asked` | NEEDS_INPUT |
 | `permission.replied` | RUNNING |
 | `session.idle`, `session.status` | fallback for RUNNING/DONE |
@@ -275,6 +277,7 @@ branch lookup runs in parallel per pane with a 1.5 s cap; failures render `-`.
   "state": "needs_input",
   "session_id": "0f3c…",
   "detail": "Bash",
+  "title": "fix the webhook timeout",
   "updated_at": "2026-10-26T16:40:12Z",
   "last_event_at": "2026-10-26T16:40:12Z",
   "last_focus_at": "2026-10-26T16:31:02Z"
@@ -365,7 +368,7 @@ amx/
 7. Pane ids reused after a tmux server restart never inherit old state.
 8. `ps` shows no amx process when the popup is closed.
 9. Plain shells are listed, selectable, and visually quieter than agent panes.
-10. Fuzzy search matches session name, window name, branch, and path.
+10. Fuzzy search matches session name, window name, branch, path, and title.
 11. `amx setup --dry-run` changes nothing; running it twice produces no duplicates.
 12. `go test ./...` covers state transitions, ordering, rendering, and target parsing.
 

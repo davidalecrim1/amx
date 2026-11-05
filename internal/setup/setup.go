@@ -420,6 +420,7 @@ const pane = process.env.TMUX_PANE
 const launchDir = process.cwd()
 let projectDir = undefined
 let sessionID = undefined
+let sessionTitle = undefined
 
 function report(payload) {
   if (!pane && !projectDir) return
@@ -427,7 +428,7 @@ function report(payload) {
     const proc = spawn(BIN, ["report"], { detached: true, stdio: ["pipe", "ignore", "ignore"] })
     proc.on("error", () => {})
     proc.stdin.on("error", () => {})
-    proc.stdin.end(JSON.stringify({ pane_id: pane, cwd: launchDir, project: projectDir, agent: "opencode", ...payload }))
+    proc.stdin.end(JSON.stringify({ pane_id: pane, cwd: launchDir, project: projectDir, agent: "opencode", title: sessionTitle, ...payload }))
     proc.unref()
   } catch {}
 }
@@ -437,16 +438,31 @@ function mine(event) {
   return sessionID !== undefined && id !== undefined && id === sessionID
 }
 
-function handle(event) {
+async function loadTitle(ctx) {
+  if (!sessionID) return
+  try {
+    const info = await ctx.session.get({ sessionID })
+    if (info?.title) sessionTitle = info.title
+  } catch {}
+}
+
+async function handle(ctx, event) {
   if (!mine(event)) return
   switch (event.type) {
     case "session.execution.started":
+      await loadTitle(ctx)
       report({ state: "running" })
       break
     case "session.execution.succeeded":
     case "session.execution.interrupted":
+      await loadTitle(ctx)
       report({ state: "done_unseen" })
       break
+    case "session.updated": {
+      const title = event?.data?.title || event?.data?.session?.title || event?.data?.info?.title
+      if (title) sessionTitle = title
+      break
+    }
     case "session.execution.failed":
       report({ state: "needs_input", detail: event?.data?.error?.type || "error" })
       break
@@ -483,14 +499,15 @@ export default Plugin.define({
     void (async () => {
       while (!controller.signal.aborted) {
         try {
-          for await (const event of ctx.event.subscribe({ signal: controller.signal })) handle(event)
+          for await (const event of ctx.event.subscribe({ signal: controller.signal })) await handle(ctx, event)
         } catch {}
         if (!controller.signal.aborted) await new Promise((r) => setTimeout(r, 1000))
       }
     })()
 
-    await ctx.session.hook("prompt", (event) => {
+    await ctx.session.hook("prompt", async (event) => {
       sessionID = event.sessionID
+      await loadTitle(ctx)
       report({ state: "running" })
     })
 

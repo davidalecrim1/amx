@@ -29,6 +29,9 @@ func ApplyClaude(event string, p map[string]any, rec *state.Record, now time.Tim
 	case "UserPromptSubmit":
 		setState(rec, state.Running, now)
 		rec.Detail = ""
+		if rec.Title == "" {
+			rec.Title = collapse(str(p["prompt"]))
+		}
 	case "PreToolUse", "PostToolUse", "PostToolUseFailure":
 		setState(rec, state.Running, now)
 	case "PermissionRequest":
