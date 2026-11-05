@@ -148,6 +148,19 @@ func (a *App) reportCmd(args []string) int {
 		_ = a.Store.Delete(pid, in.PaneID)
 		return 0
 	}
+	if in.State == "same" || in.State == "" {
+		rec, err := a.Store.Get(pid, in.PaneID)
+		if err != nil || rec == nil {
+			return 0
+		}
+		if in.Title != "" && rec.Title != in.Title {
+			rec.Title = in.Title
+			if err := a.Store.Save(*rec); err != nil {
+				return a.fail("%v", err)
+			}
+		}
+		return 0
+	}
 	st := state.State(in.State)
 	if !st.Valid() {
 		return a.fail("report: unknown state %q", in.State)

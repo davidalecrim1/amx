@@ -458,9 +458,13 @@ async function handle(ctx, event) {
       await loadTitle(ctx)
       report({ state: "done_unseen" })
       break
-    case "session.updated": {
-      const title = event?.data?.title || event?.data?.session?.title || event?.data?.info?.title
-      if (title) sessionTitle = title
+    case "session.updated":
+    case "session.updated.1": {
+      const title = event?.data?.info?.title || event?.data?.title || event?.data?.session?.title
+      if (title && title !== sessionTitle) {
+        sessionTitle = title
+        report({ state: "same", title })
+      }
       break
     }
     case "session.execution.failed":

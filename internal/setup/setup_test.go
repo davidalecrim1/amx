@@ -172,7 +172,7 @@ func TestPluginTemplateTargetsV2(t *testing.T) {
 	if !strings.Contains(pluginTemplate, `ctx.event.subscribe`) {
 		t.Fatal("plugin must subscribe to the v2 event stream")
 	}
-	for _, ev := range []string{"session.execution.started", "session.execution.succeeded", "session.execution.failed", "session.idle", "session.status", "permission.asked", "permission.replied", "session.error"} {
+	for _, ev := range []string{"session.execution.started", "session.execution.succeeded", "session.execution.failed", "session.updated", "session.idle", "session.status", "permission.asked", "permission.replied", "session.error"} {
 		if !strings.Contains(pluginTemplate, ev) {
 			t.Fatalf("plugin missing %s", ev)
 		}
