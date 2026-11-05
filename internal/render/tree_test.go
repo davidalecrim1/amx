@@ -44,7 +44,7 @@ func TestTreeOrderingAndGlyphs(t *testing.T) {
 	if !strings.Contains(rows[0], "PROJ-123") {
 		t.Fatalf("first row = %q", rows[0])
 	}
-	for _, label := range []string{"NEEDS", "RUNNING", "DONE", "IDLE"} {
+	for _, label := range []string{"NEEDS", "RUNNING", "REVIEW", "DONE"} {
 		if strings.Contains(rows[0], label) {
 			t.Fatalf("session row should have no %s badge: %q", label, rows[0])
 		}
@@ -69,7 +69,7 @@ func TestTreeOrderingAndGlyphs(t *testing.T) {
 	if !strings.Contains(last, "sleep") && !strings.Contains(last, "zsh") {
 		t.Fatalf("last row = %q", last)
 	}
-	for _, label := range []string{"NEEDS", "RUNNING", "DONE", "IDLE"} {
+	for _, label := range []string{"NEEDS", "RUNNING", "REVIEW", "DONE"} {
 		if strings.Contains(last, label) {
 			t.Fatalf("non-agent pane should have no %s badge: %q", label, last)
 		}
@@ -100,7 +100,7 @@ func TestStatusOnlyOnAgentPanes(t *testing.T) {
 	rows := Rows(panes, records, Options{Now: now, ANSI: false})
 
 	for _, r := range rows {
-		labels := []string{"NEEDS", "RUNNING", "DONE", "IDLE"}
+		labels := []string{"NEEDS", "RUNNING", "REVIEW", "DONE"}
 		isAgentRow := strings.HasSuffix(r, "\tp:%1") || strings.HasSuffix(r, "\tp:%2")
 		if isAgentRow {
 			continue

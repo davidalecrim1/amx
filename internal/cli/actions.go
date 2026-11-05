@@ -96,10 +96,10 @@ func (a *App) killCmd(args []string) int {
 
 func (a *App) resetCmd(args []string) int {
 	return a.mutateTargets(args, "reset", func(rec *state.Record) bool {
-		if rec.State == state.Idle {
+		if rec.State == state.Done {
 			return false
 		}
-		rec.State = state.Idle
+		rec.State = state.Done
 		rec.UpdatedAt = a.Now()
 		return true
 	})
@@ -107,10 +107,10 @@ func (a *App) resetCmd(args []string) int {
 
 func (a *App) unreadCmd(args []string) int {
 	return a.mutateTargets(args, "unread", func(rec *state.Record) bool {
-		if rec.State != state.Idle {
+		if rec.State != state.Done {
 			return false
 		}
-		rec.State = state.DoneUnseen
+		rec.State = state.Review
 		rec.UpdatedAt = a.Now()
 		return true
 	})
@@ -118,10 +118,10 @@ func (a *App) unreadCmd(args []string) int {
 
 func (a *App) ackCmd(args []string) int {
 	return a.mutateTargets(args, "ack", func(rec *state.Record) bool {
-		if rec.State != state.DoneUnseen {
+		if rec.State != state.Review {
 			return false
 		}
-		rec.State = state.Idle
+		rec.State = state.Done
 		rec.UpdatedAt = a.Now()
 		return true
 	})
@@ -206,8 +206,8 @@ func (a *App) focusCmd(args []string) int {
 		return 0
 	}
 	rec.LastFocus = now
-	if rec.State == state.DoneUnseen {
-		rec.State = state.Idle
+	if rec.State == state.Review {
+		rec.State = state.Done
 		rec.UpdatedAt = now
 	}
 	_ = a.Store.Save(*rec)

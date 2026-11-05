@@ -24,7 +24,7 @@ func ApplyClaude(event string, p map[string]any, rec *state.Record, now time.Tim
 
 	switch event {
 	case "SessionStart":
-		setState(rec, state.Idle, now)
+		setState(rec, state.Done, now)
 		rec.Detail = ""
 	case "UserPromptSubmit":
 		setState(rec, state.Running, now)
@@ -55,7 +55,7 @@ func ApplyClaude(event string, p map[string]any, rec *state.Record, now time.Tim
 		if len(list(p["background_tasks"])) > 0 {
 			setState(rec, state.Running, now)
 		} else {
-			setState(rec, state.DoneUnseen, now)
+			setState(rec, state.Review, now)
 		}
 	case "StopFailure":
 		setState(rec, state.NeedsInput, now)

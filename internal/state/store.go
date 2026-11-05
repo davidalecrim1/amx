@@ -17,8 +17,8 @@ type State string
 const (
 	NeedsInput State = "needs_input"
 	Running    State = "running"
-	DoneUnseen State = "done_unseen"
-	Idle       State = "idle"
+	Review     State = "review"
+	Done       State = "done"
 )
 
 // Rank orders states by how much they want the user's attention.
@@ -26,7 +26,7 @@ func (s State) Rank() int {
 	switch s {
 	case NeedsInput:
 		return 0
-	case DoneUnseen:
+	case Review:
 		return 1
 	case Running:
 		return 2
@@ -35,9 +35,20 @@ func (s State) Rank() int {
 	}
 }
 
+// Normalize maps names written by older versions onto the current states.
+func (s State) Normalize() State {
+	switch s {
+	case "done_unseen":
+		return Review
+	case "idle":
+		return Done
+	}
+	return s
+}
+
 func (s State) Valid() bool {
 	switch s {
-	case NeedsInput, Running, DoneUnseen, Idle:
+	case NeedsInput, Running, Review, Done:
 		return true
 	}
 	return false
@@ -114,8 +125,9 @@ func (s *Store) Load(pid int) (map[string]Record, error) {
 		if json.Unmarshal(data, &rec) != nil || rec.PaneID == "" || rec.ServerPID != pid {
 			continue
 		}
+		rec.State = rec.State.Normalize()
 		if !rec.State.Valid() {
-			rec.State = Idle
+			rec.State = Done
 		}
 		out[rec.PaneID] = rec
 	}
@@ -171,8 +183,9 @@ func (s *Store) Get(pid int, paneID string) (*Record, error) {
 	if rec.PaneID == "" || rec.ServerPID != pid {
 		return nil, nil
 	}
+	rec.State = rec.State.Normalize()
 	if !rec.State.Valid() {
-		rec.State = Idle
+		rec.State = Done
 	}
 	return &rec, nil
 }

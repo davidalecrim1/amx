@@ -77,8 +77,8 @@ tmux focus hooks ─> amx focus ──> state files
   exists.
 - The renderer never draws status from process names or pane contents. If a hook did not
   report it, it is not known.
-- Focus clears DONE_UNSEEN to IDLE. `amx unread` is the only path back: it promotes IDLE
-  to DONE_UNSEEN and leaves RUNNING and NEEDS_INPUT alone.
+- Focus clears REVIEW to DONE. `amx unread` is the only path back: it promotes DONE
+  to REVIEW and leaves RUNNING and NEEDS_INPUT alone.
 - Dependencies: standard library only. Do not add modules.
 
 ## Hard-won details
@@ -138,16 +138,16 @@ These are easy to regress. Each one has a test or a documented reason.
   reverse 7, default fg 39. Never hardcode truecolor; the terminal theme decides the shades.
 - The last pane column is the session title. Claude stores the first prompt as the title;
   OpenCode sends the real session title from `ctx.session.get`/`session.updated`.
-- State markers are an emoji plus an uppercase word (`🚨 NEEDS`, `🏃 RUNNING`, `✅ DONE`,
-  `💤 IDLE`), never a background colour. Only the agent pane carries a marker; session and
-  window rows stay clean even when collapsed or when they contain several agents. There is
+- State markers are an emoji plus an uppercase word (`🚨 NEEDS`, `🏃 RUNNING`,
+  `📩 REVIEW`, `✅ DONE`), never a background colour. Only the agent pane carries a
+  marker; session and window rows stay clean even when collapsed or when they contain several agents. There is
   no picker header; keep the surface minimal.
 - The picker exports `AMX_LIST_WIDTH` from the popup's tty width; `amx list` uses it to
   size the branch/path columns and truncate window names. Do not restore fixed
   widths.
 - The preview strips background SGR and every non-SGR escape, then cuts each line to
   `FZF_PREVIEW_COLUMNS - 1`. A TUI with a 200-column frame must not wrap into blocks.
-- Ordering is urgency first (needs-input → done-unseen → running → idle), then last used
+- Ordering is urgency first (needs-input → review → running → done), then last used
   descending, recursively at every level.
 - Collapse state lives in the file named by `AMX_TREE_STATE`, created per picker
   invocation and removed on exit.

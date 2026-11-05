@@ -456,7 +456,7 @@ async function handle(ctx, event) {
     case "session.execution.succeeded":
     case "session.execution.interrupted":
       await loadTitle(ctx)
-      report({ state: "done_unseen" })
+      report({ state: "review" })
       break
     case "session.updated":
     case "session.updated.1": {
@@ -471,12 +471,12 @@ async function handle(ctx, event) {
       report({ state: "needs_input", detail: event?.data?.error?.type || "error" })
       break
     case "session.idle":
-      report({ state: "done_unseen" })
+      report({ state: "review" })
       break
     case "session.status": {
       const status = event?.properties?.status?.type
       if (status === "busy") report({ state: "running" })
-      else if (status === "idle") report({ state: "done_unseen" })
+      else if (status === "idle") report({ state: "review" })
       break
     }
     case "permission.asked":

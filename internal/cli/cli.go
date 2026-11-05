@@ -95,9 +95,9 @@ func (a *App) usage() {
   amx list [--ansi] [--json]    print the tree
   amx jump <target>             switch to a session, window, or pane
   amx kill <target>             kill a pane, window, or session
-  amx reset <target>            clear tracked state
-  amx ack <target>              clear done markers
-  amx unread <target>           mark idle agents as done-unseen
+  amx reset <target>            reset tracked state to done
+  amx ack <target>              mark reviewed: review becomes done
+  amx unread <target>           mark done agents as review
   amx focus <pane-id>           tmux focus hook callback
   amx hook claude <Event>       Claude Code hook adapter
   amx report                    state writer (stdin JSON)
@@ -153,8 +153,8 @@ func (a *App) load(reconcile bool) (*snapshot, error) {
 				_ = a.Store.Delete(pid, id)
 				continue
 			}
-			if rec.State != state.Idle && isLoginShell(p.PaneCommand) && now.Sub(rec.LastEvent) > time.Minute {
-				rec.State = state.Idle
+			if rec.State != state.Done && isLoginShell(p.PaneCommand) && now.Sub(rec.LastEvent) > time.Minute {
+				rec.State = state.Done
 				rec.UpdatedAt = rec.LastEvent
 				records[id] = rec
 				_ = a.Store.Save(rec)

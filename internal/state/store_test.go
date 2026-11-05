@@ -32,7 +32,7 @@ func TestSaveLoad(t *testing.T) {
 
 func TestLoadIgnoresOtherServers(t *testing.T) {
 	store := NewStore(t.TempDir())
-	store.Save(Record{PaneID: "%1", ServerPID: 1, State: Idle})
+	store.Save(Record{PaneID: "%1", ServerPID: 1, State: Done})
 	store.Save(Record{PaneID: "%1", ServerPID: 2, State: Running})
 
 	got, _ := store.Load(2)
@@ -43,8 +43,8 @@ func TestLoadIgnoresOtherServers(t *testing.T) {
 
 func TestPruneServerDropsMissingPanes(t *testing.T) {
 	store := NewStore(t.TempDir())
-	store.Save(Record{PaneID: "%1", ServerPID: 5, State: Idle})
-	store.Save(Record{PaneID: "%2", ServerPID: 5, State: Idle})
+	store.Save(Record{PaneID: "%1", ServerPID: 5, State: Done})
+	store.Save(Record{PaneID: "%2", ServerPID: 5, State: Done})
 
 	store.PruneServer(5, map[string]bool{"%2": true})
 
@@ -63,8 +63,8 @@ func TestPruneServerDropsMissingPanes(t *testing.T) {
 func TestPruneServersKeepsLive(t *testing.T) {
 	store := NewStore(t.TempDir())
 	current := os.Getpid()
-	store.Save(Record{PaneID: "%1", ServerPID: current, State: Idle})
-	store.Save(Record{PaneID: "%1", ServerPID: 999999, State: Idle})
+	store.Save(Record{PaneID: "%1", ServerPID: current, State: Done})
+	store.Save(Record{PaneID: "%1", ServerPID: 999999, State: Done})
 
 	store.PruneServers(current)
 
@@ -73,6 +73,23 @@ func TestPruneServersKeepsLive(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(store.Root, "servers", strconv.Itoa(current))); err != nil {
 		t.Fatal("live server dir should stay")
+	}
+}
+
+func TestLegacyStatesNormalize(t *testing.T) {
+	store := NewStore(t.TempDir())
+	store.Save(Record{PaneID: "%1", ServerPID: 7, State: "done_unseen"})
+	store.Save(Record{PaneID: "%2", ServerPID: 7, State: "idle"})
+
+	got, err := store.Load(7)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got["%1"].State != Review {
+		t.Fatalf("%%1 = %q, want review", got["%1"].State)
+	}
+	if got["%2"].State != Done {
+		t.Fatalf("%%2 = %q, want done", got["%2"].State)
 	}
 }
 

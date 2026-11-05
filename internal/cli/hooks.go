@@ -45,7 +45,7 @@ func (a *App) hookCmd(args []string) int {
 			PaneID:    paneID,
 			ServerPID: pid,
 			Agent:     "claude",
-			State:     state.Idle,
+			State:     state.Done,
 		}
 	}
 
@@ -55,8 +55,8 @@ func (a *App) hookCmd(args []string) int {
 		return 0
 	}
 	// A finish in the pane the user is staring at is already seen.
-	if rec.State == state.DoneUnseen && tmux.PaneFocused(paneID) {
-		rec.State = state.Idle
+	if rec.State == state.Review && tmux.PaneFocused(paneID) {
+		rec.State = state.Done
 		rec.UpdatedAt = now
 	}
 	if res.Changed {
@@ -161,7 +161,7 @@ func (a *App) reportCmd(args []string) int {
 		}
 		return 0
 	}
-	st := state.State(in.State)
+	st := state.State(in.State).Normalize()
 	if !st.Valid() {
 		return a.fail("report: unknown state %q", in.State)
 	}
@@ -185,6 +185,11 @@ func (a *App) reportCmd(args []string) int {
 	}
 	if rec.State != st || rec.UpdatedAt.IsZero() {
 		rec.State = st
+		rec.UpdatedAt = now
+	}
+	// A finish in the pane the user is staring at is already reviewed.
+	if rec.State == state.Review && tmux.PaneFocused(in.PaneID) {
+		rec.State = state.Done
 		rec.UpdatedAt = now
 	}
 	rec.LastEvent = now

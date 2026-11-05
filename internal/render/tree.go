@@ -189,7 +189,7 @@ func group(panes []tmux.Pane, records map[string]state.Record, opt Options) []se
 	for _, p := range panes {
 		s, ok := bySession[p.SessionName]
 		if !ok {
-			s = &sessionView{name: p.SessionName, path: p.SessionPath, attached: p.Attached, rank: state.Idle.Rank()}
+			s = &sessionView{name: p.SessionName, path: p.SessionPath, attached: p.Attached, rank: state.Done.Rank()}
 			bySession[p.SessionName] = s
 			order = append(order, p.SessionName)
 		}
@@ -201,10 +201,10 @@ func group(panes []tmux.Pane, records map[string]state.Record, opt Options) []se
 			}
 		}
 		if wIdx < 0 {
-			s.windows = append(s.windows, windowView{index: p.WindowIndex, name: p.WindowName, rank: state.Idle.Rank()})
+			s.windows = append(s.windows, windowView{index: p.WindowIndex, name: p.WindowName, rank: state.Done.Rank()})
 			wIdx = len(s.windows) - 1
 		}
-		pv := paneView{pane: p, rank: state.Idle.Rank(), branch: opt.Branches[p.PaneID]}
+		pv := paneView{pane: p, rank: state.Done.Rank(), branch: opt.Branches[p.PaneID]}
 		if rec, ok := records[p.PaneID]; ok {
 			r := rec
 			pv.rec = &r
@@ -372,10 +372,10 @@ func stateLabel(s state.State) string {
 		return "NEEDS"
 	case state.Running:
 		return "RUNNING"
-	case state.DoneUnseen:
-		return "DONE"
+	case state.Review:
+		return "REVIEW"
 	default:
-		return "IDLE"
+		return "DONE"
 	}
 }
 
@@ -394,10 +394,10 @@ func stateEmoji(s state.State) string {
 		return "🚨"
 	case state.Running:
 		return "🏃"
-	case state.DoneUnseen:
-		return "✅"
+	case state.Review:
+		return "📩"
 	default:
-		return "💤"
+		return "✅"
 	}
 }
 

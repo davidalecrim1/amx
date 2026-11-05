@@ -10,7 +10,7 @@ import (
 var now = time.Date(2026, 10, 26, 16, 0, 0, 0, time.UTC)
 
 func TestPromptStartsRunning(t *testing.T) {
-	rec := &state.Record{State: state.DoneUnseen}
+	rec := &state.Record{State: state.Review}
 	res := ApplyClaude("UserPromptSubmit", map[string]any{
 		"prompt":     "fix   the\nwebhook",
 		"session_id": "abc",
@@ -52,8 +52,8 @@ func TestPermissionRequestBlocks(t *testing.T) {
 func TestStopMarksDone(t *testing.T) {
 	rec := &state.Record{State: state.Running}
 	ApplyClaude("Stop", map[string]any{"background_tasks": []any{}}, rec, now)
-	if rec.State != state.DoneUnseen {
-		t.Fatalf("state = %q, want done_unseen", rec.State)
+	if rec.State != state.Review {
+		t.Fatalf("state = %q, want review", rec.State)
 	}
 }
 
@@ -95,7 +95,7 @@ func TestStopFailureBlocks(t *testing.T) {
 }
 
 func TestSessionEndDeletes(t *testing.T) {
-	rec := &state.Record{State: state.Idle}
+	rec := &state.Record{State: state.Done}
 	res := ApplyClaude("SessionEnd", map[string]any{}, rec, now)
 	if !res.Delete {
 		t.Fatal("expected delete")

@@ -130,8 +130,8 @@ func (a *App) doctorCmd(args []string) int {
 	for _, rec := range s.Records {
 		counts[rec.State]++
 	}
-	fmt.Fprintf(a.Stdout, "tracked: %d (needs_input %d, done_unseen %d, running %d, idle %d)\n",
-		len(s.Records), counts[state.NeedsInput], counts[state.DoneUnseen], counts[state.Running], counts[state.Idle])
+	fmt.Fprintf(a.Stdout, "tracked: %d (needs_input %d, review %d, running %d, done %d)\n",
+		len(s.Records), counts[state.NeedsInput], counts[state.Review], counts[state.Running], counts[state.Done])
 
 	live := map[string]bool{}
 	for _, p := range s.Panes {

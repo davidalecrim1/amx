@@ -18,7 +18,7 @@ reads it.
       └─ 🏃 RUNNING  8s  2.0   opencode main            api
 ▾ PROJ-456  web
   └─    0 zsh
-      └─ 💤 IDLE 1h  0.0   claude   main            web
+      └─ ✅ DONE 1h  0.0   claude   main            web
 ```
 
 Status comes from agent lifecycle hooks, not from parsing pane output or polling
@@ -39,7 +39,7 @@ to filter, jump.
 ## Features
 
 - Full session/window/pane tree, so it is a real `prefix+w` replacement for navigation.
-- Four-state agent awareness: needs input, running, finished-unseen, idle.
+- Four-state agent awareness: needs input, running, review, done.
 - Urgency-first ordering: sessions with a blocked agent float to the top; within a state,
   the most recently used rows come first and old work sinks.
 - Collapsible tree with `h`/`l`/`;`, like `choose-tree`.
@@ -130,9 +130,9 @@ search mode.
 | `Enter` | jump to the selected session, window, or pane |
 | `x` | kill the selected pane, window, or session immediately |
 | `Ctrl-X` | same as `x` |
-| `Ctrl-R` | reset tracked state to idle |
+| `Ctrl-R` | reset tracked state to done |
 | `Ctrl-A` | acknowledge a done marker |
-| `Ctrl-U` | mark the selected target unread again (idle agents only) |
+| `Ctrl-U` | mark the selected target unread again (done agents only) |
 | `Ctrl-Y` | copy `session:window.pane` |
 | `Ctrl-O` | copy the pane's working directory |
 
@@ -145,18 +145,18 @@ collapsed. The marker stays on the agent pane beneath them.
 | --- | --- | --- |
 | NEEDS_INPUT | 🚨 NEEDS | blocked on a permission prompt, question, or error |
 | RUNNING | 🏃 RUNNING | working |
-| DONE_UNSEEN | ✅ DONE | finished since you last focused the pane |
-| IDLE | 💤 IDLE | alive, waiting for a prompt |
+| REVIEW | 📩 REVIEW | finished, waiting for your review |
+| DONE | ✅ DONE | reviewed, or alive and waiting for a prompt |
 
 Markers are an emoji plus an uppercase word, with no background color. Status lives on the
 agent's pane, never on the session or window above it: a window with one nvim pane and one
 opencode pane badges only the opencode row, and a session with several agents still leaves
 the session and window rows blank. Ordering still uses the worst descendant, so a session
-with a blocked agent floats to the top. Focusing a pane
-clears `DONE` through tmux hooks. `Ctrl-A` clears it without visiting. A finish inside the
-pane you are currently looking at is recorded as idle immediately. To flag an agent again
-after reading it, press `prefix+u` in its pane or `Ctrl-U` on its row: idle agents go back
-to `DONE` so they return to the top of the list.
+with a blocked agent floats to the top. Focusing a pane turns `REVIEW` into `DONE`
+through tmux hooks. `Ctrl-A` does the same without visiting. A finish inside the pane you
+are currently looking at is recorded as `DONE` immediately. To flag an agent again after
+reading it, press `prefix+u` in its pane or `Ctrl-U` on its row: `DONE` agents go back to
+`REVIEW` so they return to the top of the list.
 
 ## Agents
 
@@ -174,7 +174,7 @@ never block the agent: they always exit zero and absorb their own errors.
 
 The generated plugin subscribes to the OpenCode v2 event stream. Prompts, tool calls, and
 `session.execution.started` mark running; `session.execution.succeeded` or
-`interrupted` mark done; `session.execution.failed` marks needs-input with the error type;
+`interrupted` mark review; `session.execution.failed` marks needs-input with the error type;
 `permission.asked` marks needs-input; `session.deleted` removes the record. The v2 stream
 uses `session.execution.*`; `session.idle` and `session.status` remain as fallbacks.
 
@@ -189,7 +189,8 @@ plugin's project directory, preferring the pane that is actually running `openco
 echo '{"pane_id":"%3","agent":"aider","state":"running","title":"fix the parser"}' | amx report
 ```
 
-Valid states are `needs_input`, `running`, `done_unseen`, `idle`, and `gone` (delete).
+Valid states are `needs_input`, `running`, `review`, `done`, and `gone` (delete). The old
+names `done_unseen` and `idle` are still accepted and normalized.
 `pane_id` defaults to `$TMUX_PANE`.
 
 ## How it works
