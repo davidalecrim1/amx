@@ -41,8 +41,13 @@ func TestTreeOrderingAndGlyphs(t *testing.T) {
 	if len(rows) != 7 {
 		t.Fatalf("got %d rows: %v", len(rows), rows)
 	}
-	if !strings.Contains(rows[0], "PROJ-123") || !strings.Contains(rows[0], "NEEDS") {
+	if !strings.Contains(rows[0], "PROJ-123") {
 		t.Fatalf("first row = %q", rows[0])
+	}
+	for _, label := range []string{"NEEDS", "RUNNING", "DONE", "IDLE"} {
+		if strings.Contains(rows[0], label) {
+			t.Fatalf("session row should have no %s badge: %q", label, rows[0])
+		}
 	}
 	if !strings.HasSuffix(rows[0], "\ts:PROJ-123") {
 		t.Fatalf("missing session ref: %q", rows[0])
@@ -81,43 +86,34 @@ func TestTreeOrderingAndGlyphs(t *testing.T) {
 	}
 }
 
-func TestSingleAgentSessionHasNoAggregate(t *testing.T) {
+func TestStatusOnlyOnAgentPanes(t *testing.T) {
 	now := time.Now()
 	panes := []tmux.Pane{
 		pane("S", "0", "0", "%1", "opencode", true, true),
-		pane("S", "0", "1", "%2", "zsh", false, true),
+		pane("S", "0", "1", "%2", "opencode", false, true),
+		pane("S", "1", "0", "%3", "zsh", false, false),
 	}
 	records := map[string]state.Record{
 		"%1": {PaneID: "%1", Agent: "opencode", State: state.Running, UpdatedAt: now, LastEvent: now},
+		"%2": {PaneID: "%2", Agent: "opencode", State: state.NeedsInput, UpdatedAt: now, LastEvent: now},
 	}
 	rows := Rows(panes, records, Options{Now: now, ANSI: false})
 
 	for _, r := range rows {
-		if strings.HasSuffix(r, "\ts:S") && strings.Contains(r, "RUNNING") {
-			t.Fatalf("session should not aggregate a single agent: %q", r)
+		labels := []string{"NEEDS", "RUNNING", "DONE", "IDLE"}
+		isAgentRow := strings.HasSuffix(r, "\tp:%1") || strings.HasSuffix(r, "\tp:%2")
+		if isAgentRow {
+			continue
 		}
-		if strings.HasSuffix(r, "\tw:S:0") && strings.Contains(r, "RUNNING") {
-			t.Fatalf("expanded window should not show a badge: %q", r)
+		for _, label := range labels {
+			if strings.Contains(r, label) {
+				t.Fatalf("only agent panes may carry %s: %q", label, r)
+			}
 		}
-	}
-	var agentRow, shellRow string
-	for _, r := range rows {
-		if strings.HasSuffix(r, "\tp:%1") {
-			agentRow = r
-		}
-		if strings.HasSuffix(r, "\tp:%2") {
-			shellRow = r
-		}
-	}
-	if !strings.Contains(agentRow, "RUNNING") {
-		t.Fatalf("agent pane should carry the badge: %q", agentRow)
-	}
-	if strings.Contains(shellRow, "RUNNING") || strings.Contains(shellRow, "IDLE") {
-		t.Fatalf("shell pane should have no badge: %q", shellRow)
 	}
 }
 
-func TestCollapsedWindowShowsAggregate(t *testing.T) {
+func TestCollapsedWindowHasNoBadge(t *testing.T) {
 	now := time.Now()
 	panes := []tmux.Pane{pane("S", "0", "0", "%1", "opencode", true, true)}
 	records := map[string]state.Record{
@@ -125,8 +121,11 @@ func TestCollapsedWindowShowsAggregate(t *testing.T) {
 	}
 	rows := Rows(panes, records, Options{Now: now, ANSI: false, Collapsed: map[string]bool{"w:S:0": true}})
 	for _, r := range rows {
-		if strings.HasSuffix(r, "\tw:S:0") && !strings.Contains(r, "RUNNING") {
-			t.Fatalf("collapsed window should show its state: %q", r)
+		if strings.HasSuffix(r, "\tw:S:0") && strings.Contains(r, "RUNNING") {
+			t.Fatalf("collapsed window should have no badge: %q", r)
+		}
+		if strings.HasSuffix(r, "\ts:S") && strings.Contains(r, "RUNNING") {
+			t.Fatalf("session should have no badge: %q", r)
 		}
 	}
 }

@@ -139,9 +139,9 @@ These are easy to regress. Each one has a test or a documented reason.
 - The last pane column is the session title. Claude stores the first prompt as the title;
   OpenCode sends the real session title from `ctx.session.get`/`session.updated`.
 - State markers are an emoji plus an uppercase word (`🚨 NEEDS`, `🏃 RUNNING`, `✅ DONE`,
-  `💤 IDLE`), never a background colour. Only the agent pane carries a marker. A session
-  aggregates only when it has more than one agent or is collapsed; a window aggregates only
-  when collapsed. There is no picker header; keep the surface minimal.
+  `💤 IDLE`), never a background colour. Only the agent pane carries a marker; session and
+  window rows stay clean even when collapsed or when they contain several agents. There is
+  no picker header; keep the surface minimal.
 - The picker exports `AMX_LIST_WIDTH` from the popup's tty width; `amx list` uses it to
   size the branch/path columns and truncate window names. Do not restore fixed
   widths.

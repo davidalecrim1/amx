@@ -10,7 +10,7 @@ reads it.
 ![amx picker showing a tmux session tree with agent states](assets/amx.png)
 
 ```
-▾ PROJ-123  🚨 NEEDS  api
+▾ PROJ-123  api
   ├─ ▾ 1 claude
   │   ├─ 🚨 NEEDS   2m   1.0   claude   feature/retry   api   why does this test fail?
   │   └─ 🏃 RUNNING 12s  1.1   claude   feature/retry   api   add the retry budget
@@ -18,7 +18,7 @@ reads it.
       └─ 🏃 RUNNING  8s  2.0   opencode main            api
 ▾ PROJ-456  web
   └─    0 zsh
-      └─ 💤 IDLE 1h  0.0   zsh      main            web
+      └─ 💤 IDLE 1h  0.0   claude   main            web
 ```
 
 Status comes from agent lifecycle hooks, not from parsing pane output or polling
@@ -136,8 +136,8 @@ search mode.
 | `Ctrl-Y` | copy `session:window.pane` |
 | `Ctrl-O` | copy the pane's working directory |
 
-Sessions and windows keep the aggregate state of their hidden children when collapsed, so
-a collapsed session with a blocked agent still shows red.
+Sessions and windows are organizational rows: they never show a state marker, even when
+collapsed. The marker stays on the agent pane beneath them.
 
 ## Status
 
@@ -149,9 +149,10 @@ a collapsed session with a blocked agent still shows red.
 | IDLE | 💤 IDLE | alive, waiting for a prompt |
 
 Markers are an emoji plus an uppercase word, with no background color. Status lives on the
-agent's pane, not on the window above it: a window with one nvim pane and one opencode pane
-badges only the opencode row. A session shows its worst state when it contains more than one
-agent, or when it is collapsed; a window shows its state only when collapsed. Focusing a pane
+agent's pane, never on the session or window above it: a window with one nvim pane and one
+opencode pane badges only the opencode row, and a session with several agents still leaves
+the session and window rows blank. Ordering still uses the worst descendant, so a session
+with a blocked agent floats to the top. Focusing a pane
 clears `DONE` through tmux hooks. `Ctrl-A` clears it without visiting. A finish inside the
 pane you are currently looking at is recorded as idle immediately. To flag an agent again
 after reading it, press `prefix+u` in its pane or `Ctrl-U` on its row: idle agents go back

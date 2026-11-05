@@ -59,13 +59,13 @@ applies.
 Every row is selectable. Box-drawing tree, sessions as headers with windows and panes
 nested beneath. Sessions and windows start expanded; `h` collapses and `l` expands the
 selected node, the same way `choose-tree` does. Collapsed rows switch their marker from
-`▾` to `▸` and keep the aggregate state of everything hidden inside them.
+`▾` to `▸`. Collapsing hides children only; it never adds a status marker.
 
 ```
- ▾ PROJ-123  🚨 NEEDS  add retry to webhook consumer
+ ▾ PROJ-123  add retry to webhook consumer
    ├─ ▾ 1 claude
    │   ├─ 🚨 NEEDS   1.1 claude  feature/retry  fix webhook timeout…   12s
-   │   └─ 🏃 RUNNING 1.2 zsh     feature/retry  ~/api
+   │   └─                    1.2 zsh     feature/retry  ~/api
    └─ ▾ 2 review
        └─ 🚨 NEEDS   2.1 claude  main           why does this fail?   2m
 ```
@@ -74,8 +74,8 @@ Row anatomy:
 
 | Row | Prefix | Columns |
 | --- | --- | --- |
-| session | `▾` (underlined name if attached here) | session name (bold), aggregate badge when it has more than one agent or is collapsed, path basename |
-| window | `├─` / `└─` + `▾` | window index, window name, aggregate badge only when collapsed |
+| session | `▾` (underlined name if attached here) | session name (bold), path basename |
+| window | `├─` / `└─` + `▾` | window index, window name |
 | pane | `├─` / `└─` | state badge for agent panes only, `window.pane`, agent or foreground command, git branch, cwd basename (`~` for `$HOME`), age, session title |
 
 Session summary line is `#{session_path}` basename when it differs from the session name,
@@ -99,8 +99,8 @@ longest current value. The title is the last column and only appears on agent ro
 branch, title, and window names truncate with `…` when the table does not fit the popup. The marker is
 padded to the width of `🏃 RUNNING` so the pane columns stay aligned. Status
 belongs to the agent pane: a window with one nvim pane and one opencode pane marks only the
-opencode row. A session shows its worst state when it contains more than one agent, or when
-it is collapsed; a window shows its state only when collapsed. Agent names are ANSI cyan,
+opencode row. Session and window rows never show a marker, even when collapsed or when they
+contain several agents. Agent names are ANSI cyan,
 branches ANSI magenta, age faint. fzf runs with
 `--color=16` and default backgrounds, so its chrome comes from the same palette. There is no
 header; the list is the whole surface.

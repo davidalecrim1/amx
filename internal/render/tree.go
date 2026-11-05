@@ -19,9 +19,6 @@ const (
 	bold      = "\x1b[1m"
 	faint     = "\x1b[2m"
 	underline = "\x1b[4m"
-	red       = "\x1b[31m"
-	green     = "\x1b[32m"
-	blue      = "\x1b[34m"
 	magenta   = "\x1b[35m"
 	cyan      = "\x1b[36m"
 	defaultFG = "\x1b[39m"
@@ -137,7 +134,6 @@ type sessionView struct {
 	path     string
 	attached bool
 	windows  []windowView
-	counts   map[state.State]int
 	hasAgent bool
 	rank     int
 	lastUsed time.Time
@@ -193,7 +189,7 @@ func group(panes []tmux.Pane, records map[string]state.Record, opt Options) []se
 	for _, p := range panes {
 		s, ok := bySession[p.SessionName]
 		if !ok {
-			s = &sessionView{name: p.SessionName, path: p.SessionPath, attached: p.Attached, counts: map[state.State]int{}, rank: state.Idle.Rank()}
+			s = &sessionView{name: p.SessionName, path: p.SessionPath, attached: p.Attached, rank: state.Idle.Rank()}
 			bySession[p.SessionName] = s
 			order = append(order, p.SessionName)
 		}
@@ -214,7 +210,6 @@ func group(panes []tmux.Pane, records map[string]state.Record, opt Options) []se
 			pv.rec = &r
 			pv.rank = rec.State.Rank()
 			pv.lastUsed = rec.LastUsed()
-			s.counts[rec.State]++
 			if !s.hasAgent || pv.rank < s.rank {
 				s.rank = pv.rank
 			}
@@ -278,21 +273,13 @@ func renderSession(s sessionView, opt Options) string {
 	if opt.Collapsed[sessionKey(s.name)] {
 		marker = "▸"
 	}
-	nameColor := defaultFG
-	if s.hasAgent && s.rank != state.Idle.Rank() {
-		nameColor = stateColor(state.State(rankState(s.rank)))
-	}
-	nameStyle := bold + nameColor
+	nameStyle := bold + defaultFG
 	if s.attached {
 		nameStyle += underline
 	}
 	var b strings.Builder
 	b.WriteString(paint(opt, marker+" ", faint))
 	b.WriteString(paint(opt, s.name, nameStyle))
-	if s.hasAgent && (agentCount(s) > 1 || opt.Collapsed[sessionKey(s.name)]) {
-		b.WriteString("  ")
-		b.WriteString(statusText(state.State(rankState(s.rank))))
-	}
 	if base := pathBase(s.path); base != "" && base != s.name {
 		b.WriteString("  ")
 		b.WriteString(paint(opt, base, faint))
@@ -316,20 +303,12 @@ func renderWindow(s sessionView, w windowView, last bool, opt Options) string {
 	if opt.Width > 0 {
 		winWidth = opt.Width - 12
 	}
-	collapsed := w.hasAgent && opt.Collapsed[windowKey(s.name, w.index)]
-	if collapsed {
-		winWidth -= 12
-	}
 	if winWidth < 12 {
 		winWidth = 12
 	}
 	b.WriteString(paint(opt, w.index, bold+defaultFG))
 	b.WriteString(" ")
 	b.WriteString(paint(opt, truncate(w.name, winWidth), faint))
-	if collapsed {
-		b.WriteString("  ")
-		b.WriteString(statusText(state.State(rankState(w.rank))))
-	}
 	return b.String()
 }
 
@@ -386,14 +365,6 @@ func branchName(p paneView) string {
 	return p.branch
 }
 
-func agentCount(s sessionView) int {
-	n := 0
-	for _, c := range s.counts {
-		n += c
-	}
-	return n
-}
-
 // stateLabel is the uppercase word shown in the status badge.
 func stateLabel(s state.State) string {
 	switch s {
@@ -427,32 +398,6 @@ func stateEmoji(s state.State) string {
 		return "✅"
 	default:
 		return "💤"
-	}
-}
-
-func stateColor(s state.State) string {
-	switch s {
-	case state.NeedsInput:
-		return red
-	case state.Running:
-		return green
-	case state.DoneUnseen:
-		return blue
-	default:
-		return faint
-	}
-}
-
-func rankState(rank int) state.State {
-	switch rank {
-	case 0:
-		return state.NeedsInput
-	case 1:
-		return state.DoneUnseen
-	case 2:
-		return state.Running
-	default:
-		return state.Idle
 	}
 }
 
